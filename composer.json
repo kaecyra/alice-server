@@ -1,0 +1,34 @@
+{
+    "name": "kaecyra/alice-server",
+    "description": "Smart mirror WebSocket server",
+    "keywords": ["smart","smartmirror","mirror","alice","alice-server"],
+    "homepage": "https://github.com/kaecyra/alice-server",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Tim Gunter",
+            "email": "tim@vanillaforums.com",
+            "homepage": "https://vanillaforums.com"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/kaecyra/alice-common"
+        }
+    ],
+    "require": {
+        "php": ">=5.5",
+        "kaecyra/alice-common": "dev-master",
+        "ronanguilloux/php-gpio": "^1.0.0"
+    },
+    "autoload": {
+        "psr-4": { 
+            "Alice\\": "library"
+        },
+        "files": [
+            
+        ]
+    }
+}

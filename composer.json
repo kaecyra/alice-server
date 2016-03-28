@@ -22,6 +22,7 @@
         "php": ">=5.5",
         "kaecyra/alice-common": "dev-master",
         "cboden/ratchet": "0.3.*",
+        "ratchet/pawl": "0.2.*",
         "ronanguilloux/php-gpio": "^1.0.0"
     },
     "autoload": {

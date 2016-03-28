@@ -18,9 +18,6 @@ class Sockets extends \Ratchet\App {
 
         rec("   route: /hardware -> Hardware");
         $this->route('/hardware', new Hardware);
-
-        rec("   route: /echo -> EchoServer");
-        $this->route('/echo', new \Ratchet\Server\EchoServer, array('*'));
     }
 
 }

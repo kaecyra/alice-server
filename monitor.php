@@ -9,7 +9,7 @@
 namespace Alice;
 
 /**
- * alice.php is a websocket server for the ALICE mirror system.
+ * monitor.php is the hardware monitor service for the ALICE mirror system.
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
@@ -19,7 +19,7 @@ namespace Alice;
 use \Alice\Daemon\Daemon;
 
 chdir(dirname(__FILE__));
-define('APP', 'alice-server');
+define('APP', 'alice-monitor');
 define('APP_ROOT', getcwd());
 date_default_timezone_set('UTC');
 
@@ -43,12 +43,12 @@ try {
         'appDir'            => APP_ROOT,
         'appDescription'    => 'ALICE websocket server.',
         'appNamespace'      => 'Alice',
-        'appName'           => 'Alice',
+        'appName'           => 'Monitor',
         'authorName'        => 'Tim Gunter',
         'authorEmail'       => 'tim@vanillaforums.com',
         'appConcurrent'     => false,
         'appLogLevel'       => Daemon::LOG_L_ALL,
-        'appLogFile'        => 'log/alice.log',
+        'appLogFile'        => 'log/monitor.log',
         //'sysRunAsGroup'     => 'root',
         //'sysRunAsUser'      => 'root',
         'sysMode'           => Daemon::MODE_SINGLE,

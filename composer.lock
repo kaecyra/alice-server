@@ -309,7 +309,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/kaecyra/alice-common",
-                "reference": "272febac82e9ea3ca308a736f7375caaca8eb1cb"
+                "reference": "28eb30ce002ac75a7171a6786683df5150418d5f"
             },
             "require": {
                 "php": ">=5.5",
@@ -344,7 +344,7 @@
                 "smart",
                 "smartmirror"
             ],
-            "time": "2016-03-28 21:30:08"
+            "time": "2016-03-28 21:33:31"
         },
         {
             "name": "react/event-loop",

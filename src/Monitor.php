@@ -19,23 +19,31 @@ use Alice\Server\Sockets;
 use Exception;
 
 /**
- * ALICE Daemon
+ * ALICE Websocket Client
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-class Alice implements App {
+class Monitor implements App {
 
     protected $store;
     protected $config;
 
-    protected $server;
+    /**
+     *
+     * @var Alice\Server\Sockets
+     */
+    protected $sockets;
 
-    static $alice = null;
+    /**
+     *
+     * @var Alice\Monitor
+     */
+    static $server = null;
 
     public function __construct() {
         rec(sprintf("%s (v%s)", APP, APP_VERSION), Daemon::LOG_L_APP, Daemon::LOG_O_SHOWTIME);
-        self::$alice = $this;
+        self::$server = $this;
 
         // Store
         rec(' preparing data store');
@@ -49,12 +57,12 @@ class Alice implements App {
     }
 
     /**
-     * Get Jarvis reference
+     * Get Alice Server reference
      *
-     * @return Jarvis
+     * @return Alice\Monitor
      */
     public static function go() {
-        return self::$jarvis;
+        return self::$server;
     }
 
     /**
@@ -77,8 +85,8 @@ class Alice implements App {
         rec(' starting listeners');
 
         // Run the server application
-        $this->server = new Sockets($this->config->get('sockets.host'), $this->config->get('sockets.port'));
-        $ran = $this->server->run();
+        $this->sockets = new Sockets($this->config->get('sockets.host'), $this->config->get('sockets.port'));
+        $ran = $this->sockets->run();
 
         rec(' listeners closed');
         rec($ran);

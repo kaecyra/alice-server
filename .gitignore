@@ -1,5 +1,5 @@
 /conf/config.json
 /vendor/
 /log/
-alice-server.pid
-alice.pid
+server.pid
+monitor.pid

@@ -21,14 +21,12 @@
     "require": {
         "php": ">=5.5",
         "kaecyra/alice-common": "dev-master",
+        "cboden/ratchet": "0.3.*",
         "ronanguilloux/php-gpio": "^1.0.0"
     },
     "autoload": {
         "psr-4": { 
-            "Alice\\": "library"
-        },
-        "files": [
-            
-        ]
+            "Alice\\": "src"
+        }
     }
 }

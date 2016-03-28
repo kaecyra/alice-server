@@ -52,7 +52,7 @@ try {
         //'sysRunAsGroup'     => 'root',
         //'sysRunAsUser'      => 'root',
         'sysMode'           => Daemon::MODE_SINGLE,
-        'sysDaemonize'      => true
+        'sysDaemonize'      => false
     ]);
 
     $exitCode = Daemon::start($argv);

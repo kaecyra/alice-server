@@ -14,17 +14,12 @@ use Alice\Common\Config;
 use Alice\Common\Store;
 use Alice\Common\Event;
 
+use Alice\Server\Sockets;
+
 use Exception;
 
 /**
- * Daemon manager
- *
- * Abstracts forking-to-daemon logic away from application logic. Also handles
- * child pool management.
- *
- * @todo When forking, fork into two processes and use one as a clean control to
- * watch the other. When the worker ends, inspect the exit state and determine
- * whether to reload or fully quit and restart from cron.
+ * ALICE Daemon
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
@@ -33,6 +28,8 @@ class Alice implements App {
 
     protected $store;
     protected $config;
+
+    protected $server;
 
     static $alice = null;
 
@@ -78,6 +75,12 @@ class Alice implements App {
 
         // Enable periodic ticks
         Event::enableTicks();
+
+        rec(' waiting for connections');
+
+        // Run the server application
+        $this->server = new Sockets($this->config->get('sockets.host'), $this->config->get('sockets.port'));
+        $ran = $this->server->run();
     }
 
 }

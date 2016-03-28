@@ -2,3 +2,4 @@
 /vendor/
 /log/
 alice-server.pid
+alice.pid

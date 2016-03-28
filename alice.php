@@ -16,7 +16,7 @@ namespace Alice;
  * @version 1.0
  */
 
-use \Alice\Daemon;
+use \Alice\Daemon\Daemon;
 
 chdir(dirname(__FILE__));
 define('APP', 'alice-server');
@@ -39,11 +39,11 @@ $exitCode = 0;
 try {
 
     Daemon::configure([
-        'appName'           => APP,
         'appVersion'        => APP_VERSION,
         'appDir'            => APP_ROOT,
         'appDescription'    => 'ALICE websocket server.',
         'appNamespace'      => 'Alice',
+        'appName'           => 'Alice',
         'authorName'        => 'Tim Gunter',
         'authorEmail'       => 'tim@vanillaforums.com',
         'appConcurrent'     => false,
@@ -55,13 +55,12 @@ try {
         'sysDaemonize'      => true
     ]);
 
-    Daemon::start($argv);
+    $exitCode = Daemon::start($argv);
 
-} catch (Exception $ex) {
+} catch (\Alice\Daemon\Exception $ex) {
+
     $exceptionCode = $ex->getCode();
     if ($exceptionCode != 200) {
-        $exitCode = 1;
-        $msgOptions = 0;
 
         // Don't write to file for commandline errors
         if ($exceptionCode == 600) {
@@ -75,6 +74,17 @@ try {
         }
         Daemon::log(Daemon::LOG_L_FATAL, $ex->getMessage(), $msgOptions);
     }
+
+} catch (\Exception $ex) {
+    $exitCode = 1;
+    $msgOptions = 0;
+
+    if ($ex->getFile()) {
+        $line = $ex->getLine();
+        $file = $ex->getFile();
+        Daemon::log(Daemon::LOG_L_FATAL, "Error on line {$line} of {$file}:", $msgOptions);
+    }
+    Daemon::log(Daemon::LOG_L_FATAL, $ex->getMessage(), $msgOptions);
 }
 
 exit($exitCode);

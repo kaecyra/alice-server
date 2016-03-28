@@ -10,7 +10,7 @@ namespace Alice\Server;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 
-class UI implements MessageComponentInterface {
+class Hardware implements MessageComponentInterface {
 
     protected $clients;
 

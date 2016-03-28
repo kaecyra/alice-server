@@ -69,18 +69,21 @@ class Alice implements App {
         $appDir = Daemon::option('appDir');
         $this->store->set('dir', $appDir);
 
-        rec(' running');
-
         Event::fire('startup');
 
         // Enable periodic ticks
         Event::enableTicks();
 
-        rec(' waiting for connections');
+        rec(' starting listeners');
 
         // Run the server application
         $this->server = new Sockets($this->config->get('sockets.host'), $this->config->get('sockets.port'));
         $ran = $this->server->run();
+
+        rec(' listeners closed');
+        rec($ran);
+
+
     }
 
 }

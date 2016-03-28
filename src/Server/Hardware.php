@@ -19,15 +19,13 @@ class Hardware implements MessageComponentInterface {
     }
 
     public function onOpen(ConnectionInterface $conn) {
+        rec(" hardware client connected");
+        rec($conn);
         $this->clients->attach($conn);
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
-        foreach ($this->clients as $client) {
-            if ($from != $client) {
-                $client->send($msg);
-            }
-        }
+        rec();
     }
 
     public function onClose(ConnectionInterface $conn) {

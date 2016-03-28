@@ -85,7 +85,7 @@ class Server implements App {
         rec(' starting listeners');
 
         // Run the server application
-        $this->sockets = new Sockets($this->config->get('sockets.host'), $this->config->get('sockets.port'));
+        $this->sockets = new Sockets($this->config->get('server.host'), $this->config->get('server.port'));
         $ran = $this->sockets->run();
 
         rec(' listeners closed');

@@ -82,15 +82,10 @@ class Monitor implements App {
         // Enable periodic ticks
         Event::enableTicks();
 
-        rec(' starting listeners');
+        rec(' starting client');
 
-        // Run the server application
-        $this->sockets = new Sockets($this->config->get('sockets.host'), $this->config->get('sockets.port'));
-        $ran = $this->sockets->run();
 
-        rec(' listeners closed');
-        rec($ran);
-
+        rec(' client closed');
 
     }
 

@@ -10,6 +10,8 @@ namespace Alice\Server;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 
+use Alice\Server\UI\Message;
+
 class UI implements MessageComponentInterface {
 
     protected $clients;
@@ -19,22 +21,22 @@ class UI implements MessageComponentInterface {
     }
 
     public function onOpen(ConnectionInterface $conn) {
+        rec("ui client connected");
+        rec($conn);
         $this->clients->attach($conn);
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
-        foreach ($this->clients as $client) {
-            if ($from != $client) {
-                $client->send($msg);
-            }
-        }
+        $message = new Message($from, $msg);
     }
 
     public function onClose(ConnectionInterface $conn) {
+        rec("ui client disconnected");
         $this->clients->detach($conn);
     }
 
     public function onError(ConnectionInterface $conn, \Exception $ex) {
+        rec("ui client error: ".$ex->getMessage());
         $conn->close();
     }
 

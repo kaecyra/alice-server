@@ -39,8 +39,40 @@ class Mirror {
     public function __construct(\Ratchet\ConnectionInterface $connection) {
         $this->connection = $connection;
 
-        Event::hook('data_query', [$this, 'query']);
-        Event::hook('data_update', [$this, 'update']);
+        rec(" mirror startup");
+        $this->hook('data_query', [$this, 'query']);
+        $this->hook('data_update', [$this, 'update']);
+    }
+
+    /**
+     * Register a hook
+     *
+     * @param string $event
+     * @param type $callback
+     */
+    public function hook($event, $callback) {
+        $signature = Event::hook($event, $callback);
+        $this->registerHook($event, $signature);
+    }
+
+    /**
+     * Register a module hook
+     *
+     * @param string $event
+     * @param string $signature
+     */
+    public function registerHook($event, $signature) {
+        rec("  registered hook for '{$event}' -> {$signature}");
+        $this->hooks[$event] = $signature;
+    }
+
+    /**
+     * Get list of events hooked by this module
+     *
+     * @return array
+     */
+    public function getHooks() {
+        return $this->hooks;
     }
 
     /**
@@ -114,6 +146,8 @@ class Mirror {
             }
         }
 
+        Event::fire('registered');
+
         // Let the mirror know that registration was successful
         $this->send('registered');
     }
@@ -128,13 +162,24 @@ class Mirror {
         switch ($feature) {
             case 'weather':
                 // Test input
-                $fields = ['city', 'citycode', 'units'];
+                $fields = ['city', 'latitude', 'longitude', 'units'];
                 if (count(array_intersect($fields, array_keys($data))) != count($fields)) {
                     return $this->error("failed to register '{$feature}': requires ".implode(',',$fields));
                 }
 
                 $city = val('city', $data);
                 rec("  registered feature: {$feature} ({$city})");
+                $this->features[$feature] = $data;
+                break;
+
+            case 'time':
+                // Test input
+                $timezone = val('timezone', $data);
+                if (!$timezone) {
+                    return $this->error("failed to register '{$feature}': requires timezone");
+                }
+
+                rec("  registered feature: {$feature} ({$timezone})");
                 $this->features[$feature] = $data;
                 break;
 
@@ -175,6 +220,14 @@ class Mirror {
                     'data' => $data
                 ]);
                 break;
+
+            case 'time':
+                $this->send('update', [
+                    'feature' => $feature,
+                    'data' => $data
+                ]);
+                break;
+
             default:
                 break;
         }
@@ -187,6 +240,14 @@ class Mirror {
      */
     public function shutdown() {
         rec(" mirror shutdown: {$this->name}");
+
+        $hooks = $this->getHooks();
+
+        // Remove hooks for this module
+        foreach ($hooks as $event => $signature) {
+            rec("  unregistered hook for '{$event}' -> {$signature}");
+            Event::unhook($event, $signature);
+        }
     }
 
 }

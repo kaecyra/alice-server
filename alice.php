@@ -9,7 +9,7 @@
 namespace Alice;
 
 /**
- * server.php is a websocket server for the ALICE mirror system.
+ * alice.php is a websocket server for the ALICE mirror system.
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
@@ -43,7 +43,7 @@ try {
         'appDir'            => APP_ROOT,
         'appDescription'    => 'ALICE websocket server.',
         'appNamespace'      => 'Alice',
-        'appName'           => 'Server',
+        'appName'           => 'Alice',
         'authorName'        => 'Tim Gunter',
         'authorEmail'       => 'tim@vanillaforums.com',
         'appConcurrent'     => false,

@@ -367,7 +367,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/kaecyra/alice-common",
-                "reference": "7439f696e034899aa7260980b9de129a01304fe2"
+                "reference": "1f363905c667d4b14ff22468260edf6f9cc34028"
             },
             "require": {
                 "php": ">=5.5",
@@ -402,7 +402,7 @@
                 "smart",
                 "smartmirror"
             ],
-            "time": "2016-03-29 00:03:37"
+            "time": "2016-04-10 01:52:51"
         },
         {
             "name": "psr/http-message",

@@ -153,6 +153,15 @@ class Mirror {
     }
 
     /**
+     * Handle mirror catchup
+     *
+     * @param Message $message
+     */
+    public function message_catchup(Message $message) {
+        Event::fire('catchup');
+    }
+
+    /**
      * Register a feature on this mirror
      *
      * @param string $feature
@@ -180,6 +189,17 @@ class Mirror {
                 }
 
                 rec("  registered feature: {$feature} ({$timezone})");
+                $this->features[$feature] = $data;
+                break;
+
+            case 'news':
+                // Test input
+                $limit = val('limit', $data);
+                if (!$limit) {
+                    return $this->error("failed to register '{$feature}': requires limit");
+                }
+
+                rec("  registered feature: {$feature} ({$limit} stories)");
                 $this->features[$feature] = $data;
                 break;
 
@@ -215,13 +235,8 @@ class Mirror {
         rec("data updated: {$feature}");
         switch ($feature) {
             case 'weather':
-                $this->send('update', [
-                    'feature' => $feature,
-                    'data' => $data
-                ]);
-                break;
-
             case 'time':
+            case 'news':
                 $this->send('update', [
                     'feature' => $feature,
                     'data' => $data

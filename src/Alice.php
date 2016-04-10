@@ -60,7 +60,8 @@ class Alice implements App {
      */
     protected $frequencies = [
         'weather' => 600,
-        'time' => 60
+        'time' => 60,
+        'news' => 600
     ];
 
     /**
@@ -88,7 +89,7 @@ class Alice implements App {
         // Predefine timers as now
         $this->clearTimers();
 
-        Event::hook('registered', [$this, 'catchUp']);
+        Event::hook('catchup', [$this, 'catchUp']);
     }
 
     /**
@@ -149,6 +150,7 @@ class Alice implements App {
                 $this->want($feature, $data);
             }
         }
+
     }
 
     /**
@@ -160,7 +162,7 @@ class Alice implements App {
      */
     public function want($feature, $data, $fresh = true) {
         $freshness = $fresh ? 'fresh only' : 'cached is ok';
-        rec(" want '{$feature}' {$freshness}");
+        rec(" want '{$feature}', {$freshness}");
         switch ($feature) {
             case 'weather':
                 $updateKey = "{$feature}:{$data['city']}";
@@ -168,6 +170,10 @@ class Alice implements App {
 
             case 'time':
                 $updateKey = "{$feature}:{$data['timezone']}";
+                break;
+
+            case 'news':
+                $updateKey = "{$feature}";
                 break;
 
             default:
@@ -191,7 +197,7 @@ class Alice implements App {
             'data' => $data,
             'cache' => !$fresh
         ];
-        $this->store->push($want);
+        $this->store->push('wants', $want);
         return true;
     }
 
@@ -200,9 +206,18 @@ class Alice implements App {
      *
      */
     public function satisfy() {
+
+        // Don't multi-satisfy
+        if ($this->store->get('satisfying', false)) {
+            return;
+        }
+
+        $this->store->set('satisfying', true);
+
         $wants = $this->store->get('wants', []);
         $this->store->delete('wants');
         if (!count($wants)) {
+            $this->store->delete('satisfying');
             return;
         }
 
@@ -222,6 +237,10 @@ class Alice implements App {
                 case 'time':
                     $result = $this->updateTime($want['data']);
                     break;
+
+                case 'news':
+                    $result = $this->updateNews($want['data']);
+                    break;
             }
 
             if ($result) {
@@ -231,6 +250,8 @@ class Alice implements App {
                 Event::fire('data_update', [$want['feature'], $result]);
             }
         }
+
+        $this->store->delete('satisfying');
     }
 
     /**
@@ -282,7 +303,7 @@ class Alice implements App {
         ]);
 
         $api = new HttpClient($host);
-        $api->setDefaultHeader('Content-Type', 'application/json');;
+        $api->setDefaultHeader('Content-Type', 'application/json');
 
         $response = $api->get($path, [
             'units' => $units,
@@ -300,8 +321,9 @@ class Alice implements App {
             $minSummary = val('summary', $minute);
 
             $weather = array_merge($current, [
-                'now' => $minSummary,
-                'today' => $summary
+                'now' => rtrim($minSummary, '.'),
+                'today' => rtrim($summary, '.'),
+                'summary' => rtrim($current['summary'], '.')
             ]);
 
             $round = [
@@ -328,6 +350,7 @@ class Alice implements App {
 
             return $weather;
         }
+        return false;
     }
 
     /**
@@ -348,6 +371,59 @@ class Alice implements App {
             'month' => $date->format('F j'),
             'day' => $date->format('l')
         ];
+    }
+
+    /**
+     * Get news
+     * @param type $data
+     */
+    public function updateNews($data) {
+
+        rec(" requesting updated news data");
+
+        $host = $this->config->get('interact.news.host');
+        $path = $this->config->get('interact.news.path');
+        $key = $this->config->get('interact.news.key');
+        $useragent = $this->config->get('interact.news.useragent');
+
+        $api = new HttpClient($host);
+        $api->setDefaultHeader('Content-Type', 'application/json');
+        $api->setDefaultHeader('User-Agent', $useragent);
+
+        $arguments = $this->config->get('interact.news.arguments');
+
+        $response = $api->get($path, array_merge($arguments, [
+            'api-key' => $key
+        ]));
+
+        if ($response->isResponseClass('2xx')) {
+            $newsData = $response->getBody();
+            $results = val('results', $newsData);
+
+            $news = [];
+            $maxResults = val('limit', $data, 6);
+            foreach ($results as $result) {
+                if ($result['item_type'] != 'Article') {
+                    continue;
+                }
+                if (count($news) >= $maxResults) {
+                    break;
+                }
+
+                $news[] = [
+                    'title' => $result['title'],
+                    'url' => $result['url'],
+                    'source' => $result['source'],
+                    'id' => sha1($result['url'])
+                ];
+            }
+
+            return [
+                'count' => count($news),
+                'articles' => $news
+            ];
+        }
+        return false;
     }
 
     /**

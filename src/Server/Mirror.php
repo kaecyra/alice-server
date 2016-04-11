@@ -130,6 +130,8 @@ class Mirror {
         rec(" client mirror registering");
         $data = $message->getData();
 
+        sleep(1);
+
         // Name
         $name = val('name', $data);
         if (!$name) {

@@ -16,6 +16,8 @@ use Alice\Common\Event;
 
 use Alice\Server\Sockets;
 
+use Alice\API\News;
+
 use React\EventLoop\Factory as LoopFactory;
 
 use Garden\Http\HttpClient;
@@ -375,55 +377,23 @@ class Alice implements App {
 
     /**
      * Get news
-     * @param type $data
+     *
+     * @param array $data
      */
     public function updateNews($data) {
 
         rec(" requesting updated news data");
 
-        $host = $this->config->get('interact.news.host');
-        $path = $this->config->get('interact.news.path');
-        $key = $this->config->get('interact.news.key');
-        $useragent = $this->config->get('interact.news.useragent');
+        $newsConfig = $this->config->get('interact.news');
+        $source = val('source', $newsConfig);
+        $sourceConfig = valr("sources.{$source}", $newsConfig);
+        switch ($source) {
+            case 'nyt':
+                return News::getNYT($data, $sourceConfig);
 
-        $api = new HttpClient($host);
-        $api->setDefaultHeader('Content-Type', 'application/json');
-        $api->setDefaultHeader('User-Agent', $useragent);
-
-        $arguments = $this->config->get('interact.news.arguments');
-
-        $response = $api->get($path, array_merge($arguments, [
-            'api-key' => $key
-        ]));
-
-        if ($response->isResponseClass('2xx')) {
-            $newsData = $response->getBody();
-            $results = val('results', $newsData);
-
-            $news = [];
-            $maxResults = val('limit', $data, 6);
-            foreach ($results as $result) {
-                if ($result['item_type'] != 'Article') {
-                    continue;
-                }
-                if (count($news) >= $maxResults) {
-                    break;
-                }
-
-                $news[] = [
-                    'title' => $result['title'],
-                    'url' => $result['url'],
-                    'source' => $result['source'],
-                    'id' => sha1($result['url'])
-                ];
-            }
-
-            return [
-                'count' => count($news),
-                'articles' => $news
-            ];
+            case 'reddit':
+                return News::getReddit($data, $sourceConfig);
         }
-        return false;
     }
 
     /**

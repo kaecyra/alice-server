@@ -20,21 +20,44 @@ use Exception;
 class News {
 
     /**
+     * Get news
+     *
+     * @param array $ui
+     * @param array $config
+     * @param HttpClient $api
+     */
+    public static function get($ui, $config, HttpClient $api) {
+
+        rec(" requesting updated news data");
+        
+        $source = val('source', $config);
+        $sourceConfig = valr("sources.{$source}", $config);
+        switch ($source) {
+            case 'nyt':
+                return News::getNYT($ui, $sourceConfig, $api);
+
+            case 'reddit':
+                return News::getReddit($ui, $sourceConfig, $api);
+        }
+        return false;
+    }
+
+    /**
      * Get news from reddit
      *
      * @param array $ui
      * @param array $config
+     * @param HttpClient $api
      * @return array|false
      */
-    public static function getReddit($ui, $config) {
+    public static function getReddit($ui, $config, HttpClient $api) {
+
         rec("  fetching news from reddit");
+
         $host = val('host', $config);
         $path = val('path', $config);
-        $useragent = val('useragent', $config);
 
-        $api = new HttpClient($host);
-        $api->setDefaultHeader('Content-Type', 'application/json');
-        $api->setDefaultHeader('User-Agent', $useragent);
+        $api->setBaseUrl($host);
 
         $response = $api->get($path);
 
@@ -82,18 +105,18 @@ class News {
      *
      * @param array $ui
      * @param array $config
+     * @param HttpClient $api
      * @return array|false
      */
-    public static function getNYT($ui, $config) {
+    public static function getNYT($ui, $config, HttpClient $api) {
+
         rec("  fetching news from nyt");
+
         $host = val('host', $config);
         $path = val('path', $config);
         $key = val('key', $config);
-        $useragent = val('useragent', $config);
 
-        $api = new HttpClient($host);
-        $api->setDefaultHeader('Content-Type', 'application/json');
-        $api->setDefaultHeader('User-Agent', $useragent);
+        $api->setBaseUrl($host);
 
         $arguments = $this->config->get('interact.news.arguments');
 

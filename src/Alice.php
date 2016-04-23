@@ -17,6 +17,7 @@ use Alice\Common\Event;
 use Alice\Server\Sockets;
 
 use Alice\API\News;
+use Alice\API\Weather;
 
 use React\EventLoop\Factory as LoopFactory;
 
@@ -86,12 +87,17 @@ class Alice implements App {
         rec(' reading config');
         $this->config = Config::file(paths($appDir, 'conf/config.json'), true);
 
+        // Motion
+        $motionConfig = $this->config->get('monitor.motion');
+        $this->motion = new Motion($motionConfig);
+
         // Hooks
 
         // Predefine timers as now
         $this->clearTimers();
 
         Event::hook('catchup', [$this, 'catchUp']);
+        Event::hook('connected', [$this, 'mirrorConnected']);
     }
 
     /**
@@ -151,6 +157,22 @@ class Alice implements App {
             foreach ($items as $data) {
                 $this->want($feature, $data);
             }
+        }
+
+        // Check for motion
+        $motion = $this->motion->sense();
+
+        if (!$motion) {
+
+            // Check for simulated motion
+
+
+        }
+
+        if ($motion === true) {
+            Event::fire('motion');
+        } else if ($motion === false) {
+            Event::fire('still');
         }
 
     }
@@ -265,7 +287,7 @@ class Alice implements App {
      */
     public function setCache($feature, $key, $data) {
         $ttl = val($feature, $this->frequencies, 60);
-        \apc_store($key, $data, $ttl);
+        \apcu_store($key, $data, $ttl);
     }
 
     /**
@@ -275,11 +297,35 @@ class Alice implements App {
      */
     public function getCache($key) {
         $found = false;
-        $cached = \apc_fetch($key, $found);
+        $cached = \apcu_fetch($key, $found);
         if ($found) {
             return $cached;
         }
         return false;
+    }
+
+    /**
+     * Get mirror config
+     *
+     * @return array
+     */
+    public function mirrorConnected() {
+        return $this->config->get('mirror');
+    }
+
+    /**
+     * Get an API client
+     */
+    public function getAPI() {
+        $api = new HttpClient();
+        $api->setDefaultHeader('Content-Type', 'application/json');
+
+        $userAgent = $this->config->get('interact.useragent');
+        if ($userAgent) {
+            $api->setDefaultHeader('User-Agent', $userAgent);
+        }
+
+        return $api;
     }
 
     /**
@@ -288,71 +334,18 @@ class Alice implements App {
      * @param array $data
      */
     public function updateWeather($data) {
-        $city = val('city', $data);
-        $latitude = val('latitude', $data);
-        $longitude = val('longitude', $data);
-        $units = val('units', $data);
-        rec(" requesting updated weather data: {$city}");
+        $weatherConfig = $this->config->get('interact.weather');
+        return Weather::get($data, $weatherConfig, $this->getAPI());
+    }
 
-        $host = $this->config->get('interact.weather.host');
-        $path = $this->config->get('interact.weather.path');
-        $key = $this->config->get('interact.weather.key');
-
-        $path = formatString($path, [
-            'api' => $key,
-            'latitude' => $latitude,
-            'longitude' => $longitude
-        ]);
-
-        $api = new HttpClient($host);
-        $api->setDefaultHeader('Content-Type', 'application/json');
-
-        $response = $api->get($path, [
-            'units' => $units,
-            'exclude' => 'daily'
-        ]);
-
-        if ($response->isResponseClass('2xx')) {
-            $weatherData = $response->getBody();
-
-            $current = val('currently', $weatherData);
-            $minute = val('minutely', $weatherData);
-            $hourly = val('hourly', $weatherData);
-
-            $summary = val('summary', $hourly);
-            $minSummary = val('summary', $minute);
-
-            $weather = array_merge($current, [
-                'now' => rtrim($minSummary, '.'),
-                'today' => rtrim($summary, '.'),
-                'summary' => rtrim($current['summary'], '.')
-            ]);
-
-            $round = [
-                'temperature' => 0,
-                'apparentTemperature' => 0,
-                'dewPoint' => 0,
-                'visibility' => 1
-            ];
-            foreach ($round as $roundKey => $roundPrecision) {
-                $weather[$roundKey] = round($weather[$roundKey], $roundPrecision);
-            }
-
-            $percent = [
-                'humidity',
-                'cloudCover',
-                'precipProbability'
-            ];
-            foreach ($percent as $percentKey) {
-                $weather[$percentKey] = round($weather[$percentKey] * 100, 0);
-            }
-
-            $temp = val('temperature', $weather);
-            rec("  {$temp} degrees C with {$minSummary}");
-
-            return $weather;
-        }
-        return false;
+    /**
+     * Get news
+     *
+     * @param array $data
+     */
+    public function updateNews($data) {
+        $newsConfig = $this->config->get('interact.news');
+        return News::get($data, $newsConfig, $this->getAPI());
     }
 
     /**
@@ -373,27 +366,6 @@ class Alice implements App {
             'month' => $date->format('F j'),
             'day' => $date->format('l')
         ];
-    }
-
-    /**
-     * Get news
-     *
-     * @param array $data
-     */
-    public function updateNews($data) {
-
-        rec(" requesting updated news data");
-
-        $newsConfig = $this->config->get('interact.news');
-        $source = val('source', $newsConfig);
-        $sourceConfig = valr("sources.{$source}", $newsConfig);
-        switch ($source) {
-            case 'nyt':
-                return News::getNYT($data, $sourceConfig);
-
-            case 'reddit':
-                return News::getReddit($data, $sourceConfig);
-        }
     }
 
     /**

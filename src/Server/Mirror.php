@@ -36,13 +36,27 @@ class Mirror {
      */
     protected $features;
 
+    /**
+     * Mirror config
+     * @var array
+     */
+    protected $config;
+
+
+
+
     public function __construct(\Ratchet\ConnectionInterface $connection) {
         $this->connection = $connection;
 
         rec(" mirror startup");
         $this->hook('data_query', [$this, 'query']);
         $this->hook('data_update', [$this, 'update']);
-    }
+
+        $this->hook('motion', [$this, 'motion']);
+
+        $connected = Event::fireReturn('connected');
+        $this->config = array_pop($connected);
+   }
 
     /**
      * Register a hook
@@ -164,6 +178,28 @@ class Mirror {
     }
 
     /**
+     * TEST: send mirror to sleep
+     *
+     * @param Message $message
+     */
+    public function message_sleepme(Message $message) {
+        rec(" mirror asked to go to sleep");
+        sleep(1);
+        $this->sleep();
+    }
+
+    /**
+     * TEST: send mirror to sleep
+     *
+     * @param Message $message
+     */
+    public function message_wakeme(Message $message) {
+        rec(" mirror asked to be woken up");
+        sleep(1);
+        $this->wake();
+    }
+
+    /**
      * Register a feature on this mirror
      *
      * @param string $feature
@@ -248,6 +284,117 @@ class Mirror {
             default:
                 break;
         }
+    }
+
+    /**
+     * Put mirror to sleep
+     *
+     */
+    public function sleep() {
+        rec(" mirror going to sleep");
+
+        $tzName = val('timezone', $this->config);
+        $tz = new \DateTimeZone($tzName);
+        $date = new \DateTime('now', $tz);
+        $time = $date->getTimestamp();
+
+        // Report on and erase wake time
+        $wokeAt = apcu_fetch('mirror-awake');
+        if ($wokeAt) {
+            $waking = $time - $wokeAt;
+            $wokeDate = new \DateTime('now', $tz);
+            $date->setTimestamp($wokeAt);
+            $wokeSince = $wokeDate->format('Y-m-d H:i:s');
+            rec("  awake since {$wokeSince} ({$waking} seconds)");
+            apcu_delete('mirror-awake');
+        }
+
+        // Set sleep time
+        apcu_add('mirror-sleeping', $time);
+
+        $this->send('sleep');
+    }
+
+    /**
+     * Wake mirror up
+     *
+     */
+    public function wake() {
+        rec(" mirror waking up");
+
+        $tzName = val('timezone', $this->config);
+        $tz = new \DateTimeZone($tzName);
+        $date = new \DateTime('now', $tz);
+        $time = $date->getTimestamp();
+
+        // Report on and erase sleep time
+        $sleptAt = apcu_fetch('mirror-sleeping');
+        if ($sleptAt) {
+            $sleeping = $time - $sleptAt;
+            $sleptDate = new \DateTime('now', $tz);
+            $date->setTimestamp($sleptAt);
+            $sleptSince = $sleptDate->format('Y-m-d H:i:s');
+            rec("  slept since {$sleptSince} ({$sleeping} seconds)");
+            apcu_delete('mirror-sleeping');
+        }
+
+        // Set wake time
+        apcu_add('mirror-awake', $time);
+
+        $this->send('wake');
+    }
+
+    /**
+     * Turn off actual screen
+     *
+     */
+    public function hibernate() {
+        $this->sleep();
+    }
+
+    /**
+     * Turn on actual screen
+     *
+     */
+    public function unhibernate() {
+        $this->wake();
+    }
+
+    /**
+     * Hook motion event
+     *
+     * Alice has detected motion, so handle it here by waking the mirror and
+     * locking in our guaranteed wake period with 'dimafter'.
+     *
+     */
+    public function motion() {
+
+        $dimAfter = val('dimafter', $this->config);
+        apcu_store('mirror-lockdim', 1, $dimAfter);
+
+        // Got motion, wake the mirror
+        $this->wake();
+
+    }
+
+    /**
+     * Hook still event
+     *
+     * Alice has detected no motion, so the mirror must decide if that means we
+     * need to dim the display. This is based on whether there is a still a
+     * mutex keeping the display on, or not.
+     *
+     */
+    public function still() {
+
+        $dimLock = apcu_fetch('mirror-lockdim');
+        if ($dimLock) {
+            return;
+        }
+
+        // No motion for $dimAfter seconds, sleep
+        $this->sleep();
+
     }
 
     /**

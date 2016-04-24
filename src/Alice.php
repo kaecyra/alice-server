@@ -15,6 +15,7 @@ use Alice\Common\Store;
 use Alice\Common\Event;
 
 use Alice\Server\Sockets;
+use Alice\Server\Motion;
 
 use Alice\API\News;
 use Alice\API\Weather;

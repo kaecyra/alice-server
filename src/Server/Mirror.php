@@ -18,6 +18,10 @@ use Alice\Common\Event;
  */
 class Mirror {
 
+    const MIRROR_AWAKE = '%s.mirror-awake';
+    const MIRROR_ASLEEP = '%s.mirror-asleep';
+    const MIRROR_LOCKDIM = '%s.mirror-lockdim';
+
     /**
      * Ratchet connection
      * @var \Ratchet\ConnectionInterface
@@ -41,9 +45,6 @@ class Mirror {
      * @var array
      */
     protected $config;
-
-
-
 
     public function __construct(\Ratchet\ConnectionInterface $connection) {
         $this->connection = $connection;
@@ -167,6 +168,7 @@ class Mirror {
 
         // Let the mirror know that registration was successful
         $this->send('registered');
+        $this->wake(true);
     }
 
     /**
@@ -288,10 +290,21 @@ class Mirror {
     }
 
     /**
+     * Get namespaced cache key
+     *
+     * @param string $key
+     * @return string
+     */
+    protected function getCacheKey($key) {
+        return sprintf($key, $this->name);
+    }
+
+    /**
      * Put mirror to sleep
      *
+     * @param boolean $force force mirror to sleep even if already asleep
      */
-    public function sleep() {
+    public function sleep($force = false) {
 
         $tzName = val('timezone', $this->config);
         $tz = new \DateTimeZone($tzName);
@@ -299,56 +312,63 @@ class Mirror {
         $time = $date->getTimestamp();
 
         // Set sleep time
-        $goingToSleep = apcu_add('mirror-sleeping', $time);
-        if (!$goingToSleep) {
+        $willSleep = apcu_add($this->getCacheKey(self::MIRROR_ASLEEP), $time);
+
+        // If we failed to set sleep time, mirror is already asleep
+        if (!$willSleep && !$force) {
+            apcu_delete($this->getCacheKey(self::MIRROR_AWAKE));
             return false;
         }
 
         rec(" mirror going to sleep");
 
         // Report on and erase wake time
-        $wokeAt = apcu_fetch('mirror-awake');
+        $wokeAt = apcu_fetch($this->getCacheKey(self::MIRROR_AWAKE));
         if ($wokeAt) {
             $waking = $time - $wokeAt;
             $wokeDate = new \DateTime('now', $tz);
             $date->setTimestamp($wokeAt);
             $wokeSince = $wokeDate->format('Y-m-d H:i:s');
             rec("  awake since {$wokeSince} ({$waking} seconds)");
-            apcu_delete('mirror-awake');
+            apcu_delete($this->getCacheKey(self::MIRROR_AWAKE));
         }
 
         $this->send('sleep');
+        return true;
     }
 
     /**
      * Wake mirror up
      *
+     * @param boolean $force force mirror to wake even if already awake
      */
-    public function wake() {
+    public function wake($force = false) {
         $tzName = val('timezone', $this->config);
         $tz = new \DateTimeZone($tzName);
         $date = new \DateTime('now', $tz);
         $time = $date->getTimestamp();
 
         // Set wake time
-        $wakingUp = apcu_add('mirror-awake', $time);
-        if (!$wakingUp) {
+        $willWake = apcu_add($this->getCacheKey(self::MIRROR_AWAKE), $time);
+        if (!$willWake && !$force) {
+            apcu_delete($this->getCacheKey(self::MIRROR_ASLEEP));
             return false;
         }
 
         // Report on and erase sleep time
-        $sleptAt = apcu_fetch('mirror-sleeping');
+        $sleptAt = apcu_fetch($this->getCacheKey(self::MIRROR_ASLEEP));
         if ($sleptAt) {
             $sleeping = $time - $sleptAt;
             $sleptDate = new \DateTime('now', $tz);
             $date->setTimestamp($sleptAt);
             $sleptSince = $sleptDate->format('Y-m-d H:i:s');
             rec("  slept since {$sleptSince} ({$sleeping} seconds)");
-            apcu_delete('mirror-sleeping');
+            apcu_delete($this->getCacheKey(self::MIRROR_ASLEEP));
         }
 
         rec(" mirror waking up");
         $this->send('wake');
+        return false;
     }
 
     /**
@@ -377,7 +397,8 @@ class Mirror {
     public function motion() {
 
         $dimAfter = val('dimafter', $this->config);
-        apcu_store('mirror-lockdim', 1, $dimAfter);
+        $dimAt = time() + $dimAfter;
+        apcu_store($this->getCacheKey(self::MIRROR_LOCKDIM), $dimAt, $dimAfter);
 
         // Got motion, wake the mirror
         $this->wake();
@@ -394,9 +415,10 @@ class Mirror {
      */
     public function still() {
 
-        $dimLock = apcu_fetch('mirror-lockdim');
+        $dimLock = apcu_fetch($this->getCacheKey(self::MIRROR_LOCKDIM));
         if ($dimLock) {
-            rec("  locked out");
+            $lockedFor = $dimLock - time();
+            rec("  locked out for {$lockedFor}s");
             return;
         }
 

@@ -168,6 +168,7 @@ class Mirror {
 
         // Let the mirror know that registration was successful
         $this->send('registered');
+        $this->motion();
         $this->wake(true);
     }
 
@@ -319,13 +320,8 @@ class Mirror {
 
         // If we failed to set sleep time, mirror is already asleep
         if (!$willSleep && !$force) {
-            ob_start();
-            var_dump($willSleep);
-            $what = ob_get_clean();
-
-            $asleepSince = apcu_fetch($this->getCacheKey(self::MIRROR_AWAKE));
-
-            rec("  already asleep (will wake = {$what}, asleep since {$asleepSince})");
+            $asleepSince = apcu_fetch($this->getCacheKey(self::MIRROR_ASLEEP));
+            rec("  already asleep (asleep since {$asleepSince})");
             apcu_delete($this->getCacheKey(self::MIRROR_AWAKE));
             return false;
         }
@@ -365,13 +361,8 @@ class Mirror {
         // Set wake time
         $willWake = apcu_add($this->getCacheKey(self::MIRROR_AWAKE), $time);
         if (!$willWake && !$force) {
-            ob_start();
-            var_dump($willWake);
-            $what = ob_get_clean();
-
             $awakeSince = apcu_fetch($this->getCacheKey(self::MIRROR_AWAKE));
-
-            rec("  already awake (will wake = {$what}, awake since {$awakeSince})");
+            rec("  already awake (awake since {$awakeSince})");
             apcu_delete($this->getCacheKey(self::MIRROR_ASLEEP));
             return false;
         }

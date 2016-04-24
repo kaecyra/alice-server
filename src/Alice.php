@@ -163,10 +163,8 @@ class Alice implements App {
         // Check for motion
         $motion = $this->motion->sense();
         if ($motion === true) {
-            rec("motion: yes");
             Event::fire('motion');
         } else if ($motion === false) {
-            rec("motion: no");
             Event::fire('still');
         }
 

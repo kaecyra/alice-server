@@ -322,7 +322,7 @@ class Mirror {
             return false;
         }
 
-        rec(" mirror going to sleep");
+        rec("mirror going to sleep");
 
         // Report on and erase wake time
         $wokeAt = apcu_fetch($this->getCacheKey(self::MIRROR_AWAKE));
@@ -331,7 +331,7 @@ class Mirror {
             $wokeDate = new \DateTime('now', $tz);
             $date->setTimestamp($wokeAt);
             $wokeSince = $wokeDate->format('Y-m-d H:i:s');
-            rec("  awake since {$wokeSince} ({$waking} seconds)");
+            rec(" awake since {$wokeSince} ({$waking} seconds)");
             apcu_delete($this->getCacheKey(self::MIRROR_AWAKE));
         }
 
@@ -361,7 +361,7 @@ class Mirror {
             return false;
         }
 
-        rec(" mirror waking up");
+        rec("mirror waking up");
 
         // Report on and erase sleep time
         $sleptAt = apcu_fetch($this->getCacheKey(self::MIRROR_ASLEEP));
@@ -370,7 +370,7 @@ class Mirror {
             $sleptDate = new \DateTime('now', $tz);
             $date->setTimestamp($sleptAt);
             $sleptSince = $sleptDate->format('Y-m-d H:i:s');
-            rec("  slept since {$sleptSince} ({$sleeping} seconds)");
+            rec(" slept since {$sleptSince} ({$sleeping} seconds)");
             apcu_delete($this->getCacheKey(self::MIRROR_ASLEEP));
         }
 
@@ -426,7 +426,7 @@ class Mirror {
         if ($dimLock) {
             if ($dimLock > time()) {
                 $lockedFor = $dimLock - time();
-                rec("  locked out for {$lockedFor}s");
+                rec("still lockout, {$lockedFor}s left");
                 return;
             }
 

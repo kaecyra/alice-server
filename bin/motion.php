@@ -15,6 +15,8 @@ require '../vendor/autoload.php';
 
 use PhpGpio\Gpio;
 
+use Alice\Config;
+
 // Get Alice working directory
 $pwd = dirname(__FILE__);
 $pwd = preg_replace('`bin/?$`', '', $pwd);
@@ -23,7 +25,7 @@ $configFile = 'conf/config.json';
 $configPath = paths($pwd, $configFile);
 echo "loading config\n";
 echo " file: {$configPath}\n";
-$config = \Alice\Config::app($configPath);
+$config = Config::app($configPath);
 
 // Get memcached instance
 
@@ -31,12 +33,12 @@ echo "connecting to cache\n";
 $cacheDSN = $config->get('cache');
 echo " server: {$cacheDSN['server']}\n";
 echo " port: {$cacheDSN['port']}\n";
-$cache = new Memcached();
+$cache = new \Memcached();
 $cache->addServer($cacheDSN['server'], $cacheDSN['port']);
 
 // Set up GPIO
 
-$gpio = new GPIO();
+$gpio = new Gpio();
 $gpio->unexportAll();
 
 // Motion

@@ -15,7 +15,7 @@ require '../vendor/autoload.php';
 
 use PhpGpio\Gpio;
 
-use Alice\Config;
+use Alice\Common\Config;
 
 // Get Alice working directory
 $pwd = dirname(__FILE__);

@@ -53,6 +53,7 @@ class Mirror {
         $this->hook('data_update', [$this, 'update']);
 
         $this->hook('motion', [$this, 'motion']);
+        $this->hook('still', [$this, 'still']);
 
         $connected = Event::fireReturn('connected');
         $this->config = array_pop($connected);

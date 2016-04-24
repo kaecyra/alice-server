@@ -292,12 +292,19 @@ class Mirror {
      *
      */
     public function sleep() {
-        rec(" mirror going to sleep");
 
         $tzName = val('timezone', $this->config);
         $tz = new \DateTimeZone($tzName);
         $date = new \DateTime('now', $tz);
         $time = $date->getTimestamp();
+
+        // Set sleep time
+        $goingToSleep = apcu_add('mirror-sleeping', $time);
+        if (!$goingToSleep) {
+            return false;
+        }
+
+        rec(" mirror going to sleep");
 
         // Report on and erase wake time
         $wokeAt = apcu_fetch('mirror-awake');
@@ -310,9 +317,6 @@ class Mirror {
             apcu_delete('mirror-awake');
         }
 
-        // Set sleep time
-        apcu_add('mirror-sleeping', $time);
-
         $this->send('sleep');
     }
 
@@ -321,12 +325,16 @@ class Mirror {
      *
      */
     public function wake() {
-        rec(" mirror waking up");
-
         $tzName = val('timezone', $this->config);
         $tz = new \DateTimeZone($tzName);
         $date = new \DateTime('now', $tz);
         $time = $date->getTimestamp();
+
+        // Set wake time
+        $wakingUp = apcu_add('mirror-awake', $time);
+        if (!$wakingUp) {
+            return false;
+        }
 
         // Report on and erase sleep time
         $sleptAt = apcu_fetch('mirror-sleeping');
@@ -339,9 +347,7 @@ class Mirror {
             apcu_delete('mirror-sleeping');
         }
 
-        // Set wake time
-        apcu_add('mirror-awake', $time);
-
+        rec(" mirror waking up");
         $this->send('wake');
     }
 

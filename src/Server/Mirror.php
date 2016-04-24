@@ -169,7 +169,6 @@ class Mirror {
         // Let the mirror know that registration was successful
         $this->send('registered');
         $this->motion();
-        $this->wake(true);
     }
 
     /**

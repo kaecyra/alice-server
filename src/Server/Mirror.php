@@ -303,8 +303,11 @@ class Mirror {
      * Put mirror to sleep
      *
      * @param boolean $force force mirror to sleep even if already asleep
+     * @return boolean slept or not
      */
     public function sleep($force = false) {
+
+        rec(" want to sleep");
 
         $tzName = val('timezone', $this->config);
         $tz = new \DateTimeZone($tzName);
@@ -341,8 +344,12 @@ class Mirror {
      * Wake mirror up
      *
      * @param boolean $force force mirror to wake even if already awake
+     * @return boolean woke or not
      */
     public function wake($force = false) {
+
+        rec(" want to wake");
+
         $tzName = val('timezone', $this->config);
         $tz = new \DateTimeZone($tzName);
         $date = new \DateTime('now', $tz);
@@ -368,7 +375,7 @@ class Mirror {
 
         rec(" mirror waking up");
         $this->send('wake');
-        return false;
+        return true;
     }
 
     /**

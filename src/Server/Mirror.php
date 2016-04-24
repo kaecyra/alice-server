@@ -438,9 +438,14 @@ class Mirror {
 
         $dimLock = apcu_fetch($this->getCacheKey(self::MIRROR_LOCKDIM));
         if ($dimLock) {
-            $lockedFor = $dimLock - time();
-            rec("  locked out for {$lockedFor}s");
-            return;
+            if ($dimLock > time()) {
+                $lockedFor = $dimLock - time();
+                rec("  locked out for {$lockedFor}s");
+                return;
+            }
+
+            // Lock failed to remove via TTL, remove manually
+            apcu_delete($this->getCacheKey(self::MIRROR_LOCKDIM));
         }
 
         // No motion for $dimAfter seconds, sleep

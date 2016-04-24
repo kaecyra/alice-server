@@ -58,7 +58,7 @@ if ($calibrateTime) {
 }
 
 echo "loop\n";
-$delay = $config->get('loop.delay');
+$delay = $config->get('loop.delay', 1000);
 $delayS = round($delay / 1000000,1);
 echo " delay: {$delay} ({$delayS}s)\n";
 

@@ -11,7 +11,7 @@
  * @package alice
  */
 
-require 'vendor/autoload.php';
+require '../vendor/autoload.php';
 
 use PhpGpio\Gpio;
 

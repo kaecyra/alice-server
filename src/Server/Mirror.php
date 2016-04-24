@@ -369,6 +369,8 @@ class Mirror {
      */
     public function motion() {
 
+        rec(" handling motion");
+
         $dimAfter = val('dimafter', $this->config);
         apcu_store('mirror-lockdim', 1, $dimAfter);
 
@@ -387,8 +389,11 @@ class Mirror {
      */
     public function still() {
 
+        rec(" handling still");
+
         $dimLock = apcu_fetch('mirror-lockdim');
         if ($dimLock) {
+            rec("  locked out");
             return;
         }
 

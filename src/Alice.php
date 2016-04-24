@@ -162,17 +162,11 @@ class Alice implements App {
 
         // Check for motion
         $motion = $this->motion->sense();
-
-        if (!$motion) {
-
-            // Check for simulated motion
-
-
-        }
-
         if ($motion === true) {
+            rec("motion: yes");
             Event::fire('motion');
         } else if ($motion === false) {
+            rec("motion: no");
             Event::fire('still');
         }
 

@@ -322,7 +322,10 @@ class Mirror {
             ob_start();
             var_dump($willSleep);
             $what = ob_get_clean();
-            rec("  already asleep (will sleep = {$what})");
+
+            $asleepSince = apcu_fetch($this->getCacheKey(self::MIRROR_AWAKE));
+
+            rec("  already asleep (will wake = {$what}, asleep since {$asleepSince})");
             apcu_delete($this->getCacheKey(self::MIRROR_AWAKE));
             return false;
         }
@@ -365,7 +368,10 @@ class Mirror {
             ob_start();
             var_dump($willWake);
             $what = ob_get_clean();
-            rec("  already awake (will wake = {$what})");
+
+            $awakeSince = apcu_fetch($this->getCacheKey(self::MIRROR_AWAKE));
+
+            rec("  already awake (will wake = {$what}, awake since {$awakeSince})");
             apcu_delete($this->getCacheKey(self::MIRROR_ASLEEP));
             return false;
         }

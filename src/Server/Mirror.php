@@ -319,6 +319,10 @@ class Mirror {
 
         // If we failed to set sleep time, mirror is already asleep
         if (!$willSleep && !$force) {
+            ob_start();
+            var_dump($willSleep);
+            $what = ob_get_clean();
+            rec("  already asleep (will sleep = {$what})");
             apcu_delete($this->getCacheKey(self::MIRROR_AWAKE));
             return false;
         }
@@ -327,7 +331,7 @@ class Mirror {
 
         // Report on and erase wake time
         $wokeAt = apcu_fetch($this->getCacheKey(self::MIRROR_AWAKE));
-        if ($wokeAt) {
+        if ($wokeAt !== false) {
             $waking = $time - $wokeAt;
             $wokeDate = new \DateTime('now', $tz);
             $date->setTimestamp($wokeAt);
@@ -358,13 +362,17 @@ class Mirror {
         // Set wake time
         $willWake = apcu_add($this->getCacheKey(self::MIRROR_AWAKE), $time);
         if (!$willWake && !$force) {
+            ob_start();
+            var_dump($willWake);
+            $what = ob_get_clean();
+            rec("  already awake (will wake = {$what})");
             apcu_delete($this->getCacheKey(self::MIRROR_ASLEEP));
             return false;
         }
 
         // Report on and erase sleep time
         $sleptAt = apcu_fetch($this->getCacheKey(self::MIRROR_ASLEEP));
-        if ($sleptAt) {
+        if ($sleptAt !== false) {
             $sleeping = $time - $sleptAt;
             $sleptDate = new \DateTime('now', $tz);
             $date->setTimestamp($sleptAt);

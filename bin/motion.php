@@ -44,23 +44,13 @@ $gpio->unexportAll();
 // Motion
 
 echo "setting up motion gpio\n";
-$motionPin = $config->get('motion.pin');
+$motionPin = $config->get('monitor.motion.pin');
 echo " pin: {$motionPin}\n";
 $gpio->setup($motionPin, "in");
 
-// LED
-
-echo "setting up LED gpio\n";
-$ledPin = $config->get('led.pin');
-echo " pin: {$ledPin}\n";
-$gpio->setup($ledPin, "out");
-
-$gpio->output($ledPin, 0);
-$lit = false;
-
 // Event loop
 
-$calibrateTime = $config->get('motion.calibrate');
+$calibrateTime = $config->get('monitor.motion.calibrate');
 if ($calibrateTime) {
     echo "PIR calibrating\n";
     echo " time: {$calibrateTime}s\n";
@@ -73,22 +63,13 @@ $delayS = round($delay / 1000000,1);
 echo " delay: {$delay} ({$delayS}s)\n";
 
 // Motion modifications
-$coolFor = $config->get('motion.cool', 5);
-$lightFor = $config->get('led.light', 0.5);
+$coolFor = $config->get('monitor.motion.cool', 5);
 
 $waitUntil = 0;
-$lightUntil = 0;
 while (true) {
     $now = microtime(true);
 
     usleep($delay);
-
-    if ($lit && $now > $lightUntil) {
-        echo "  led off\n";
-        $gpio->output($ledPin, 0);
-        $lit = false;
-        $lightUntil = 0;
-    }
 
     // Wait to retrigger if we're cooling off
     if (microtime(true) < $waitUntil) {
@@ -105,11 +86,6 @@ while (true) {
 
     if ($haveMotion) {
         $waitUntil = microtime(true) + $coolFor;
-        $lightUntil = microtime(true) + $lightFor;
-
-        echo "  led on\n";
-        $gpio->output($ledPin, 1);
-        $lit = true;
     }
 
 }

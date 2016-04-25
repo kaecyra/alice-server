@@ -32,8 +32,26 @@ if (!$matched) {
 $version = $matches[1];
 define('APP_VERSION', $version);
 
+// Make sure we're root
+if (posix_getuid() != 0) {
+    echo "Must be root.\n";
+    exit;
+}
+
 // Include the core autoloader.
-require_once __DIR__.'/vendor/autoload.php';
+$autoloader = __DIR__.'/vendor/autoload.php';
+if (!file_exists($autoloader)) {
+    echo "Generating autoloader...\n";
+    $compose = "sudo composer install --no-dev --prefer-dist --optimize-autoloader";
+    exec($compose);
+
+    if (!file_exists($autoloader)) {
+        echo "Unable to automatically generate autoloader.\n";
+        echo " Try: {$compose}\n";
+        exit;
+    }
+}
+require_once $autoloader;
 
 $exitCode = 0;
 try {

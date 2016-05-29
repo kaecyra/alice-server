@@ -7,20 +7,28 @@
 
 namespace Alice\Server;
 
+use Alice\Systems\Mirror\MirrorServer;
+use Alice\Systems\Sensor\SensorServer;
+
 /**
- * ALICE Websocket Listener
+ * ALICE Socket Dispatcher
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-class Sockets extends \Ratchet\App {
+class SocketDispatcher extends \Ratchet\App {
 
     public function __construct($httpHost = 'localhost', $port = 8080, $address = '127.0.0.1', \React\EventLoop\LoopInterface $loop = null) {
         rec("  new listener: {$httpHost}:{$port} ({$address})");
         parent::__construct($httpHost, $port, $address, $loop);
 
-        rec("   route: /alice -> Server");
-        $this->route('/alice', new Server, ['*']);
+        // Add routing for supported apps
+
+        rec("   route: /mirror -> MirrorServer");
+        $this->route('/mirror', new MirrorServer, ['*']);
+
+        rec("   route: /sensor -> SensorServer");
+        $this->route('/sensor', new SensorServer, ['*']);
     }
 
 }

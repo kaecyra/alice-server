@@ -5,10 +5,16 @@
  * @copyright 2016 Tim Gunter
  */
 
-namespace Alice\Server;
+namespace Alice\Systems\Mirror;
 
-use Alice\Server\Message;
+use Alice\Alice;
+
 use Alice\Common\Event;
+
+use Alice\Server\SocketMessage;
+use Alice\Server\SocketClient;
+
+use Ratchet\ConnectionInterface;
 
 /**
  * ALICE UI Mirror instance
@@ -16,177 +22,114 @@ use Alice\Common\Event;
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-class Mirror {
+class MirrorClient extends SocketClient {
 
     const MIRROR_AWAKE = '%s.mirror-awake';
     const MIRROR_ASLEEP = '%s.mirror-asleep';
     const MIRROR_LOCKDIM = '%s.mirror-lockdim';
 
     /**
-     * Ratchet connection
-     * @var \Ratchet\ConnectionInterface
-     */
-    protected $connection;
-
-    /**
-     * Mirror name
-     * @var string
-     */
-    protected $name;
-
-    /**
-     * Mirror features
+     * Mirror settings (from client)
      * @var array
      */
-    protected $features;
+    protected $settings;
 
     /**
-     * Mirror config
-     * @var array
+     * Mirror connectors
+     * @var array<DataWant>
      */
-    protected $config;
+    protected $connectors;
 
-    public function __construct(\Ratchet\ConnectionInterface $connection) {
-        $this->connection = $connection;
 
-        rec(" mirror startup");
-        $this->hook('data_query', [$this, 'query']);
-        $this->hook('data_update', [$this, 'update']);
+    public function __construct(ConnectionInterface $connection) {
+        parent::__construct($connection);
 
-        $this->hook('motion', [$this, 'motion']);
-        $this->hook('still', [$this, 'still']);
-
-        $connected = Event::fireReturn('connected');
-        $this->config = array_pop($connected);
-   }
-
-    /**
-     * Register a hook
-     *
-     * @param string $event
-     * @param type $callback
-     */
-    public function hook($event, $callback) {
-        $signature = Event::hook($event, $callback);
-        $this->registerHook($event, $signature);
-    }
-
-    /**
-     * Register a module hook
-     *
-     * @param string $event
-     * @param string $signature
-     */
-    public function registerHook($event, $signature) {
-        rec("  registered hook for '{$event}' -> {$signature}");
-        $this->hooks[$event] = $signature;
-    }
-
-    /**
-     * Get list of events hooked by this module
-     *
-     * @return array
-     */
-    public function getHooks() {
-        return $this->hooks;
-    }
-
-    /**
-     * Send a message to the mirror
-     *
-     * @param string $method
-     * @param mixed $data
-     */
-    public function send($method, $data = null) {
-        $message = Message::compile($method, $data);
-        $this->connection->send($message);
-    }
-
-    /**
-     * Send error (optional) and disconnect
-     *
-     * @param string $reason optional.
-     */
-    public function error($reason = null) {
-        if ($reason) {
-            rec("client error: {$reason}");
-            $this->send('error', [
-                'reason' => $reason
-            ]);
-        } else {
-            rec("client error");
-        }
-        $this->connection->close();
-    }
-
-    /**
-     * Handle incoming message from mirror UI
-     *
-     * @param Message $message
-     */
-    public function sent(Message $message) {
-        rec("ui client message: ".$message->getMethod());
-
-        // Route to message handler
-        $call = 'message_'.$message->getMethod();
-        if (is_callable([$this, $call])) {
-            $this->$call($message);
-        } else {
-            rec(sprintf(" could not handle message: unknown type '{%s}'", $message->getMethod()));
-
-        }
+        $this->settings = [];
+        $this->connectors = [];
     }
 
     /**
      * Handle mirror registrations
      *
-     * @param Message $message
+     * @param SocketMessage $message
      */
-    public function message_register(Message $message) {
-        rec(" client mirror registering");
+    public function message_register(SocketMessage $message) {
         $data = $message->getData();
+        return $this->registerClient($data);
+    }
 
+    /**
+     * Register mirror client
+     *
+     * @param array $data
+     * @return boolean
+     */
+    protected function registerClient($data) {
+        $this->rec(" mirror client registering");
         sleep(1);
 
         // Name
         $name = val('name', $data);
-        if (!$name) {
-            return $this->error("cannot register: name is required");
+        $id = val('id', $data);
+        if (!$name || !$id) {
+            return $this->sendError("cannot register: name and id are both required");
         }
-        $this->name = $name;
-        rec("  name: {$name}");
+        $this->registerClientID($name, $id);
+        $this->rec("  name: {$name}");
 
-        // Features
-        $features = val('features', $data);
-        if (is_array($features) && count($features)) {
-            foreach ($features as $feature => $featureData) {
-                $this->registerFeature($feature, $featureData);
+        // Settings
+        $settings = val('settings', $data);
+        if (!$settings) {
+            return $this->sendError("cannot register: settings are required");
+        }
+        $this->settings = $settings;
+
+        // Register sensor hooks
+        $this->hook('motion', [$this, 'motion']);
+        $this->hook('still', [$this, 'still']);
+
+        // Data Connectors
+        $connectors = val('sources', $data);
+        $required = ['type', 'filter'];
+        if (is_array($connectors) && count($connectors)) {
+            foreach ($connectors as $connector) {
+                foreach ($required as $requiredField) {
+                    if (!array_key_exists($requiredField, $connector)) {
+                        $this->rec($connector);
+                        $this->sendError("  ignoring malforumed connector ({$connector['type']}), no '{$requiredField}'");
+                        continue;
+                    }
+                }
+                $registered = $this->registerConnector($connector);
+                if ($registered !== true) {
+                    $this->sendError("  connector ({$connector['type']}) failed to register: {$registered}");
+                }
             }
         }
 
-        Event::fire('registered');
-
         // Let the mirror know that registration was successful
-        $this->send('registered');
-        $this->motion();
+        $this->sendMessage('registered');
     }
 
     /**
      * Handle mirror catchup
      *
-     * @param Message $message
+     * @param SocketMessage $message
      */
-    public function message_catchup(Message $message) {
-        Event::fire('catchup');
+    public function message_catchup(SocketMessage $message) {
+        $this->rec("mirror asked to be caught up");
+        foreach ($this->connectors as $want) {
+            $want->updateCycle(false);
+        }
     }
 
     /**
      * TEST: send mirror to sleep
      *
-     * @param Message $message
+     * @param SocketMessage $message
      */
-    public function message_sleepme(Message $message) {
-        rec(" mirror asked to go to sleep");
+    public function message_sleepme(SocketMessage $message) {
+        $this->rec(" mirror asked to go to sleep");
         sleep(1);
         $this->sleep();
     }
@@ -194,73 +137,76 @@ class Mirror {
     /**
      * TEST: send mirror to sleep
      *
-     * @param Message $message
+     * @param SocketMessage $message
      */
-    public function message_wakeme(Message $message) {
-        rec(" mirror asked to be woken up");
+    public function message_wakeme(SocketMessage $message) {
+        $this->rec(" mirror asked to be woken up");
         sleep(1);
         $this->wake();
     }
 
     /**
-     * Register a feature on this mirror
+     * Register a data connector on this mirror
      *
-     * @param string $feature
-     * @param array $data
+     * @param array $connector
+     * @return string|boolean:true string error or boolean true success
      */
-    protected function registerFeature($feature, $data) {
-        switch ($feature) {
-            case 'weather':
-                // Test input
-                $fields = ['city', 'latitude', 'longitude', 'units'];
-                if (count(array_intersect($fields, array_keys($data))) != count($fields)) {
-                    return $this->error("failed to register '{$feature}': requires ".implode(',',$fields));
-                }
+    protected function registerConnector($connector) {
+        $sourceType = $connector['type'];
+        $sourceFilter = $connector['filter'];
 
-                $city = val('city', $data);
-                rec("  registered feature: {$feature} ({$city})");
-                $this->features[$feature] = $data;
-                break;
-
-            case 'time':
-                // Test input
-                $timezone = val('timezone', $data);
-                if (!$timezone) {
-                    return $this->error("failed to register '{$feature}': requires timezone");
-                }
-
-                rec("  registered feature: {$feature} ({$timezone})");
-                $this->features[$feature] = $data;
-                break;
-
-            case 'news':
-                // Test input
-                $limit = val('limit', $data);
-                if (!$limit) {
-                    return $this->error("failed to register '{$feature}': requires limit");
-                }
-
-                rec("  registered feature: {$feature} ({$limit} stories)");
-                $this->features[$feature] = $data;
-                break;
-
-            default:
-                rec("  unsupported feature: {$feature}");
-                break;
+        // Get DataWant instance
+        $want = Alice::go()->aggregator()->loadWant($sourceType, $sourceFilter);
+        if (!$want) {
+            return "could not resolve source";
         }
-    }
 
-    /**
-     * Event hook: backend query
-     *
-     * When the backend wants to performs an update, it fires 'query' and
-     * collects feature data from all connected mirrors.
-     *
-     * @param string $feature
-     * @return array
-     */
-    public function query($feature) {
-        return val($feature, $this->features);
+        $this->rec("registering connector: ".$want->getID());
+
+        $requiredFields = $want->getRequiredFields();
+
+        $fieldAliases = [
+            'city' => 'location.city',
+            'units' => 'location.units',
+            'latitude' => 'location.latitude',
+            'longitude' => 'location.longitude'
+        ];
+
+        $connectorConfig = val('config', $connector, []);
+        if (!is_array($connectorConfig)) {
+            $connectorConfig = [];
+        }
+
+        // Allow intelligent re-use of client config settings for data connectors
+        foreach ($requiredFields as $requiredField) {
+            // If this setting isn't defined in the connector config
+            if (!array_key_exists($requiredField, $connectorConfig)) {
+                // And we know how to find it in the client config
+                if (array_key_exists($requiredField, $fieldAliases)) {
+                    // Load it from there
+                    $connectorConfig[$requiredField] = valr($fieldAliases[$requiredField], $this->settings);
+                }
+            }
+
+            if (!array_key_exists($requiredField, $connectorConfig)) {
+                return "missing config '{$requiredField}'";
+            }
+        }
+
+        // Push config to DataWant and aggregate
+        $want->setConfig($connectorConfig);
+        $want = Alice::go()->aggregator()->addWant($want);
+        if (!$want) {
+            return "could not add connector to aggregator";
+        }
+
+        // Register data collection event hook
+        $this->hook($want->getEventID(), [$this, "update"]);
+
+        // Remember want
+        $wantID = $want->getID();
+        $this->connectors[$wantID] = $want;
+        return true;
     }
 
     /**
@@ -269,17 +215,23 @@ class Mirror {
      * When the backend has performed an update, it fires 'update' to offer the
      * data back to mirrors.
      *
-     * @param string $feature
+     * @param string $sourceType
+     * @param string $sourceFilter
      * @param mixed $data
      */
-    public function update($feature, $data) {
-        rec("data updated: {$feature}");
-        switch ($feature) {
+    public function update($sourceType, $sourceFilter, $data) {
+        
+        // Handle 'still wanted' pings
+        if ($data == 'ping') {
+            return true;
+        }
+
+        switch ($sourceType) {
             case 'weather':
-            case 'time':
             case 'news':
-                $this->send('update', [
-                    'feature' => $feature,
+                $this->sendMessage('update', [
+                    'source' => $sourceType,
+                    'filter' => $sourceFilter,
                     'data' => $data
                 ]);
                 break;
@@ -307,7 +259,7 @@ class Mirror {
      */
     public function sleep($force = false) {
 
-        $tzName = val('timezone', $this->config);
+        $tzName = val('timezone', $this->settings);
         $tz = new \DateTimeZone($tzName);
         $date = new \DateTime('now', $tz);
         $time = $date->getTimestamp();
@@ -321,7 +273,7 @@ class Mirror {
             return false;
         }
 
-        rec("mirror going to sleep");
+        $this->rec("mirror going to sleep");
 
         // Report on and erase wake time
         $wokeAt = apcu_fetch($this->getCacheKey(self::MIRROR_AWAKE));
@@ -330,11 +282,11 @@ class Mirror {
             $wokeDate = new \DateTime('now', $tz);
             $date->setTimestamp($wokeAt);
             $wokeSince = $wokeDate->format('Y-m-d H:i:s');
-            rec(" awake since {$wokeSince} ({$waking} seconds)");
+            $this->rec(" awake since {$wokeSince} ({$waking} seconds)");
             apcu_delete($this->getCacheKey(self::MIRROR_AWAKE));
         }
 
-        $this->send('sleep');
+        $this->sendMessage('sleep');
         return true;
     }
 
@@ -346,7 +298,7 @@ class Mirror {
      */
     public function wake($force = false) {
 
-        $tzName = val('timezone', $this->config);
+        $tzName = val('timezone', $this->settings);
         $tz = new \DateTimeZone($tzName);
         $date = new \DateTime('now', $tz);
         $time = $date->getTimestamp();
@@ -360,7 +312,7 @@ class Mirror {
             return false;
         }
 
-        rec("mirror waking up");
+        $this->rec("mirror waking up");
 
         // Report on and erase sleep time
         $sleptAt = apcu_fetch($this->getCacheKey(self::MIRROR_ASLEEP));
@@ -369,11 +321,11 @@ class Mirror {
             $sleptDate = new \DateTime('now', $tz);
             $date->setTimestamp($sleptAt);
             $sleptSince = $sleptDate->format('Y-m-d H:i:s');
-            rec(" slept since {$sleptSince} ({$sleeping} seconds)");
+            $this->rec(" slept since {$sleptSince} ({$sleeping} seconds)");
             apcu_delete($this->getCacheKey(self::MIRROR_ASLEEP));
         }
 
-        $this->send('wake');
+        $this->sendMessage('wake');
         return true;
     }
 
@@ -402,7 +354,7 @@ class Mirror {
      */
     public function motion() {
 
-        $dimAfter = val('dimafter', $this->config);
+        $dimAfter = val('dimafter', $this->settings);
         $dimAt = time() + $dimAfter;
         apcu_store($this->getCacheKey(self::MIRROR_LOCKDIM), $dimAt, $dimAfter);
 
@@ -425,7 +377,7 @@ class Mirror {
         if ($dimLock) {
             if ($dimLock > time()) {
                 $lockedFor = $dimLock - time();
-                rec("still lockout, {$lockedFor}s left");
+                $this->rec("still lockout, {$lockedFor}s left");
                 return;
             }
 
@@ -436,23 +388,6 @@ class Mirror {
         // No motion for $dimAfter seconds, sleep
         $this->sleep();
 
-    }
-
-    /**
-     * Shutdown mirror
-     *
-     * This method is called when the mirror disconnects from the server.
-     */
-    public function shutdown() {
-        rec(" mirror shutdown: {$this->name}");
-
-        $hooks = $this->getHooks();
-
-        // Remove hooks for this module
-        foreach ($hooks as $event => $signature) {
-            rec("  unregistered hook for '{$event}' -> {$signature}");
-            Event::unhook($event, $signature);
-        }
     }
 
 }

@@ -8,14 +8,14 @@
 namespace Alice\Server;
 
 /**
- * ALICE Message wrapper
+ * ALICE Socket Message wrapper
  *
  * This class parses and encodes messages on the wire.
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-class Message {
+class SocketMessage {
 
     /**
      *
@@ -95,7 +95,7 @@ class Message {
             throw new \Exception('Unable to decode incoming message');
         }
 
-        $message = new Message();
+        $message = new SocketMessage();
         $message->populate($messageData);
         return $message;
     }
@@ -108,7 +108,7 @@ class Message {
      * @return Message
      */
     public static function compile($method, $data) {
-        $message = new Message();
+        $message = new SocketMessage();
         $message->populate([
             'method' => $method,
             'data' => $data

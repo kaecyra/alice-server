@@ -1,6 +1,6 @@
 {
     "name": "kaecyra/alice-server",
-    "description": "Smart mirror WebSocket server",
+    "description": "ALICE Smart Home Server",
     "keywords": ["smart","smartmirror","mirror","alice","alice-server"],
     "homepage": "https://github.com/kaecyra/alice-server",
     "type": "project",
@@ -21,9 +21,7 @@
     "require": {
         "php": ">=5.5",
         "kaecyra/alice-common": "dev-master",
-        "cboden/ratchet": "0.3.*",
-        "ratchet/pawl": "0.2.*",
-        "ronanguilloux/php-gpio": "^1.0.0"
+        "cboden/ratchet": "0.3.*"
     },
     "autoload": {
         "psr-4": { 

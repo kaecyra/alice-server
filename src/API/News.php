@@ -7,37 +7,37 @@
 
 namespace Alice\API;
 
-use Garden\Http\HttpClient;
-
-use Exception;
-
 /**
  * ALICE News API Wrapper
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-class News {
+class News extends API {
+
+    const API = 'newsapi';
 
     /**
      * Get news
      *
-     * @param array $ui
-     * @param array $config
-     * @param HttpClient $api
+     * @param string $filter
+     * @param array $connectorConfig
+     * @param array $sourceDefinition
      */
-    public static function get($ui, $config, HttpClient $api) {
+    public static function get($filter, $connectorConfig, $sourceDefinition) {
 
-        rec(" requesting updated news data");
-        
-        $source = val('source', $config);
-        $sourceConfig = valr("sources.{$source}", $config);
+        self::rec("requesting updated news data");
+
+        $source = val('source', $sourceDefinition);
+        $sourceConfig = val("configuration", $sourceDefinition, []);
+
+        $unifiedConfig = array_merge($sourceConfig, $connectorConfig);
         switch ($source) {
             case 'nyt':
-                return News::getNYT($ui, $sourceConfig, $api);
+                return self::getNYT($filter, $unifiedConfig);
 
             case 'reddit':
-                return News::getReddit($ui, $sourceConfig, $api);
+                return self::getReddit($filter, $unifiedConfig);
         }
         return false;
     }
@@ -45,18 +45,24 @@ class News {
     /**
      * Get news from reddit
      *
-     * @param array $ui
-     * @param array $config
-     * @param HttpClient $api
+     * @param string $filter
+     * @param array $unifiedConfig
      * @return array|false
      */
-    public static function getReddit($ui, $config, HttpClient $api) {
+    public static function getReddit($filter, $unifiedConfig) {
 
-        rec("  fetching news from reddit");
+        self::rec(" fetching news from reddit");
 
-        $host = val('host', $config);
-        $path = val('path', $config);
+        $host = val('host', $unifiedConfig);
+        $required = val('limit', $unifiedConfig, 6);
+        $width = val('width', $unifiedConfig, 70);
 
+        // Get filter-specific config settings
+        $filterConfig = valr("filters.{$filter}", $unifiedConfig);
+        $path = val('path', $filterConfig);
+
+        // Get new HttpClient
+        $api = self::getClient();
         $api->setBaseUrl($host);
 
         $response = $api->get($path);
@@ -64,9 +70,6 @@ class News {
         if ($response->isResponseClass('2xx')) {
             $newsData = $response->getBody();
             $results = valr('data.children', $newsData);
-
-            $required = val('limit', $ui, 6);
-            $width = val('width', $ui, 70);
 
             $news = [];
             foreach ($results as $result) {
@@ -96,6 +99,10 @@ class News {
                 'count' => count($news),
                 'articles' => $news
             ];
+        } else {
+            $errorBody = $response->getBody();
+            $error = val('error', $errorBody, 'unknown error');
+            self::rec(sprintf("failed to retrieve: %d (%s)", $response->getStatusCode(), $error));
         }
         return false;
     }
@@ -103,22 +110,27 @@ class News {
     /**
      * Get news from NYT
      *
-     * @param array $ui
-     * @param array $config
-     * @param HttpClient $api
+     * @param string $filter
+     * @param array $unifiedConfig
      * @return array|false
      */
-    public static function getNYT($ui, $config, HttpClient $api) {
+    public static function getNYT($filter, $unifiedConfig) {
 
-        rec("  fetching news from nyt");
+        self::rec(" fetching news from nyt");
 
-        $host = val('host', $config);
-        $path = val('path', $config);
-        $key = val('key', $config);
+        $host = val('host', $unifiedConfig);
+        $key = val('key', $unifiedConfig);
+        $required = val('limit', $unifiedConfig, 6);
+        $width = val('width', $unifiedConfig, 70);
 
+        // Get filter-specific config settings
+        $filterConfig = valr("filters.{$filter}", $unifiedConfig);
+        $path = val('path', $filterConfig);
+        $arguments = val('arguments', $filterConfig);
+
+        // Get new HttpClient
+        $api = self::getClient();
         $api->setBaseUrl($host);
-
-        $arguments = $this->config->get('interact.news.arguments');
 
         $response = $api->get($path, array_merge($arguments, [
             'api-key' => $key
@@ -127,9 +139,6 @@ class News {
         if ($response->isResponseClass('2xx')) {
             $newsData = $response->getBody();
             $results = val('results', $newsData);
-
-            $required = val('limit', $ui, 6);
-            $width = val('width', $ui, 70);
 
             $news = [];
             foreach ($results as $result) {

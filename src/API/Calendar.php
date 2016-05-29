@@ -17,6 +17,6 @@ use Exception;
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-class Calendar {
+class Calendar extends API {
 
 }

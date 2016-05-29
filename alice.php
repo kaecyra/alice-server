@@ -9,11 +9,11 @@
 namespace Alice;
 
 /**
- * alice.php is a websocket server for the ALICE mirror system.
+ * alice.php is a websocket server for the ALICE system.
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
- * @version 1.0
+ * @version 2.0
  */
 
 use \Alice\Daemon\Daemon;
@@ -59,7 +59,7 @@ try {
     Daemon::configure([
         'appVersion'        => APP_VERSION,
         'appDir'            => APP_ROOT,
-        'appDescription'    => 'ALICE websocket server.',
+        'appDescription'    => 'ALICE Smart Home Server.',
         'appNamespace'      => 'Alice',
         'appName'           => 'Alice',
         'authorName'        => 'Tim Gunter',

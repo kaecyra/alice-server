@@ -7,56 +7,70 @@
 
 namespace Alice\API;
 
-use Garden\Http\HttpClient;
-
-use Exception;
-
 /**
  * ALICE Weather API Wrapper
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-class Weather {
+class Weather extends API {
+
+    const API = 'weatherapi';
 
     /**
      * Get weather
      *
-     * @param array $ui
-     * @param array $config
-     * @param HttpClient $api
+     * @param string $filter
+     * @param array $connectorConfig
+     * @param array $sourceDefinition
      */
-    public static function get($ui, $config, HttpClient $api) {
+    public static function get($filter, $connectorConfig, $sourceDefinition) {
 
-        $city = val('city', $ui);
-        rec(" requesting updated weather data: {$city}");
+        $city = val('city', $connectorConfig);
+        self::rec("requesting updated weather data: {$city}");
 
-        $source = val('source', $config);
-        $sourceConfig = valr("sources.{$source}", $config);
+        $source = val('source', $sourceDefinition);
+        $sourceConfig = val("configuration", $sourceDefinition, []);
+
+        $unifiedConfig = array_merge($sourceConfig, $connectorConfig);
         switch ($source) {
             case 'forecast':
-                return Weather::getForecast($ui, $sourceConfig, $api);
+                return self::getForecast($filter, $unifiedConfig);
         }
         return false;
     }
 
     /**
+     * Get weather from Forecast
      *
-     * @param array $ui
-     * @param array $config
-     * @param HttpClient $api
+     * @param string $filter
+     * @param array $unifiedConfig
      */
-    public static function getForecast($ui, $config, HttpClient $api) {
+    public static function getForecast($filter, $unifiedConfig) {
 
-        rec("  fetching news from forecast.io");
+        self::rec(" fetching weather from forecast.io");
 
-        $latitude = val('latitude', $ui);
-        $longitude = val('longitude', $ui);
-        $units = val('units', $ui);
+        $latitude = val('latitude', $unifiedConfig);
+        $longitude = val('longitude', $unifiedConfig);
+        $units = val('units', $unifiedConfig);
 
-        $host = val('host', $config);
-        $path = val('path', $config);
-        $key = val('key', $config);
+        $apiUnits = 'auto';
+        switch ($units) {
+            case 'metric':
+                $apiUnits = 'ca';
+                break;
+
+            case 'imperial':
+                $apiUnits = 'us';
+                break;
+        }
+
+        $host = val('host', $unifiedConfig);
+        $key = val('key', $unifiedConfig);
+
+        // Get filter-specific config settings
+        $filterConfig = valr("filters.{$filter}", $unifiedConfig);
+        $path = val('path', $filterConfig);
 
         $path = formatString($path, [
             'api' => $key,
@@ -64,10 +78,12 @@ class Weather {
             'longitude' => $longitude
         ]);
 
+        // Get new HttpClient
+        $api = self::getClient();
         $api->setBaseUrl($host);
 
         $response = $api->get($path, [
-            'units' => $units,
+            'units' => $apiUnits,
             'exclude' => 'daily'
         ]);
 
@@ -107,9 +123,13 @@ class Weather {
             }
 
             $temp = val('temperature', $weather);
-            rec("  {$temp} degrees C ({$weather['now']}, {$weather['today']})");
+            self::rec(" {$temp} degrees C ({$weather['now']}, {$weather['today']})");
 
             return $weather;
+        } else {
+            $errorBody = $response->getBody();
+            $error = val('error', $errorBody, 'unknown error');
+            self::rec(sprintf("failed to retrieve: %d (%s)", $response->getStatusCode(), $error));
         }
         return false;
     }

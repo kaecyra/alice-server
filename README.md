@@ -1,16 +1,13 @@
-# alice-http
-Smart Mirror WebSocket server.
+# ALICE Smart Home Server
 
-This repository contains two daemons: a WebSocket server and a hardware (and API)
-monitoring daemon. They are both required.
+This repository contains the ALICE Smart Home server. This server is the core of the ALICE system and is required for all installations. 
 
-## server
+All devices and sensors connect to the server in order to facilitate interconnection. The server is responsible for remote API data aggregation and for pushing updates to devices.
 
-The server acts as a message broker between the hardware monitor and the UI layer,
-and provides client registration and management.
+## Message Broker
 
-## monitor
+The server acts as a message broker between all connected devices.
 
-The monitor connects to the server as a client and monitors the mirror hardware 
-for updates, as well as polling the remote API data sources on a regular basis 
-to provide fresh data for the UI.
+## Sensors
+
+Sensors connect to the server as clients and push updates to the server when their environment changes.

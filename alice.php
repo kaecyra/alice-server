@@ -59,7 +59,7 @@ try {
     Daemon::configure([
         'appVersion'        => APP_VERSION,
         'appDir'            => APP_ROOT,
-        'appDescription'    => 'ALICE Smart Home Server.',
+        'appDescription'    => 'ALICE Smart Home Server',
         'appNamespace'      => 'Alice',
         'appName'           => 'Alice',
         'authorName'        => 'Tim Gunter',

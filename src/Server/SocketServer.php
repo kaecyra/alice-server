@@ -8,6 +8,7 @@
 namespace Alice\Server;
 
 use Alice\Server\SocketClient;
+use Alice\Socket\SocketMessage;
 
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
@@ -106,7 +107,7 @@ abstract class SocketServer implements MessageComponentInterface {
      * @param \Exception $ex
      */
     public function onError(ConnectionInterface $conn, \Exception $ex) {
-        rec("ui client error: ".$ex->getMessage());
+        rec("socket client error: ".$ex->getMessage());
         $conn->close();
     }
 

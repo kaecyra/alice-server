@@ -11,7 +11,7 @@ use Alice\Alice;
 
 use Alice\Common\Event;
 
-use Alice\Server\SocketMessage;
+use Alice\Socket\SocketMessage;
 use Alice\Server\SocketClient;
 
 /**
@@ -73,6 +73,16 @@ class SensorClient extends SocketClient {
 
         // Let the sensor know that registration was successful
         $this->sendMessage('registered');
+    }
+
+    /**
+     * Handle sensor data
+     *
+     * @param SocketMessage $message
+     */
+    public function message_sensor(SocketMessage $message) {
+        $sensed = $message->getData();
+        $this->rec("sensor: {$sensed}");
     }
 
     /**

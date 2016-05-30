@@ -19,8 +19,6 @@ use Alice\Data\Aggregator;
 
 use React\EventLoop\Factory as LoopFactory;
 
-use Exception;
-
 /**
  * ALICE Smart Home Server Daemon
  *

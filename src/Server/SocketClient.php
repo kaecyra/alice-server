@@ -9,7 +9,7 @@ namespace Alice\Server;
 
 use Alice\Common\Event;
 
-use Alice\Server\SocketMessage;
+use Alice\Socket\SocketMessage;
 
 use Ratchet\ConnectionInterface;
 
@@ -75,7 +75,7 @@ abstract class SocketClient {
     }
 
     /**
-     * Send a message to the mirror
+     * Send a message to the client
      *
      * @param string $method
      * @param mixed $data

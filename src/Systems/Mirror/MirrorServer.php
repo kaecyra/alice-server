@@ -30,4 +30,18 @@ class MirrorServer extends SocketServer {
         return new MirrorClient($conn);
     }
 
+    /**
+     * Record socket server mesage
+     *
+     * @param mixed $message
+     * @param integer $level
+     * @param integer $options
+     */
+    public function rec($message, $level = \Alice\Daemon\Daemon::LOG_L_APP, $options = \Alice\Daemon\Daemon::LOG_O_SHOWTIME) {
+        if (is_array($message) || is_object($message)) {
+            $message = print_r($message, true);
+        }
+        rec("[mirrorserver] ".$message, $level, $options);
+    }
+
 }

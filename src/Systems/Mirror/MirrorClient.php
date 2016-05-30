@@ -11,7 +11,7 @@ use Alice\Alice;
 
 use Alice\Common\Event;
 
-use Alice\Server\SocketMessage;
+use Alice\Socket\SocketMessage;
 use Alice\Server\SocketClient;
 
 use Ratchet\ConnectionInterface;
@@ -39,7 +39,6 @@ class MirrorClient extends SocketClient {
      * @var array<DataWant>
      */
     protected $connectors;
-
 
     public function __construct(ConnectionInterface $connection) {
         parent::__construct($connection);
@@ -220,7 +219,7 @@ class MirrorClient extends SocketClient {
      * @param mixed $data
      */
     public function update($sourceType, $sourceFilter, $data) {
-        
+
         // Handle 'still wanted' pings
         if ($data == 'ping') {
             return true;

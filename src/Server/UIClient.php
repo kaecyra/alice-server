@@ -66,8 +66,8 @@ abstract class UIClient extends SocketClient {
      * @param string $class
      */
     protected function queueGenericConnectors($connectors, $class) {
-        $this->rec("queuing connectors");
         if (is_array($connectors) && count($connectors)) {
+            $this->rec("queuing {$class} connectors");
             $required = ['type', 'filter'];
             foreach ($connectors as $connector) {
                 foreach ($required as $requiredField) {

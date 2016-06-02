@@ -5,15 +5,15 @@
  * @copyright 2016 Tim Gunter
  */
 
-namespace Alice\Data;
+namespace Alice\Source;
 
 use Alice\Alice;
 
 use Alice\Common\Store;
 use Alice\Common\Event;
 
-use Alice\Data\DataSource;
-use Alice\Data\DataWant;
+use Alice\Source\Source;
+use Alice\Source\Want;
 
 use Garden\Http\HttpClient;
 
@@ -28,7 +28,15 @@ class Aggregator {
     /**
      * How long to delay between 'still wanted' pings
      */
-    const WANTED_PING = 300;
+    const WANTED_CYCLE = 300;
+
+    /**
+     * How long to delay between resolution cycles
+     */
+    const PENDING_CYCLE = 1;
+
+    const KEY_STILLWANTED = 'stillwanted';
+    const KEY_PENDING = 'pending';
 
     /**
      * Data store
@@ -37,16 +45,22 @@ class Aggregator {
     protected $store;
 
     /**
-     * List of DataSource objects
-     * @var array<DataSource>
+     * List of Source objects
+     * @var array<Source>
      */
     protected $sources;
 
     /**
-     * List of DataWant objects
-     * @var array<DataWant>
+     * List of Want objects
+     * @var array<Want>
      */
     protected $wants;
+
+    /**
+     * Pending wants
+     * @var array<Want>
+     */
+    protected $pending;
 
     /**
      * Aggregator client config
@@ -75,10 +89,11 @@ class Aggregator {
         // Wants list
         $this->wants = [];
 
-        // Last wanted ping
-        $this->lastPing = time();
+        // Last timers
+        $this->store->set(self::KEY_STILLWANTED, time());
+        $this->store->set(self::KEY_PENDING, time());
 
-        Alice::loop()->addPeriodicTimer(10, [$this, 'tick']);
+        Alice::loop()->addPeriodicTimer(1, [$this, 'tick']);
     }
 
     /**
@@ -109,23 +124,37 @@ class Aggregator {
     }
 
     /**
-     * Create configured DataSource instance
+     * Create configured Source instance
      *
+     * @param string $class
      * @param string $type
      * @param array $config
-     * @return DataSource
+     * @return Source
      */
-    public static function loadSource($type, $config) {
-        return DataSource::load($type, $config);
+    public static function loadSource($class, $type, $config) {
+        switch ($class) {
+            case 'data':
+                return DataSource::load($type, $config);
+                break;
+
+            case 'sensor':
+                return SensorSource::load($type, $config);
+                break;
+
+            default:
+                $this->rec("Unknown source category: {$class}");
+                return false;
+                break;
+        }
     }
 
     /**
-     * Add aggregated DataSource
+     * Add aggregated Source
      *
-     * @param DataSource $source
-     * @return DataSource
+     * @param Source $source
+     * @return Source
      */
-    public function addSource(DataSource $source) {
+    public function addSource(Source $source) {
         $sourceID = $source->getID();
 
         if (!$this->haveSource($source)) {
@@ -136,11 +165,11 @@ class Aggregator {
     }
 
     /**
-     * Remove aggregated DataSource
+     * Remove aggregated Source
      *
-     * @param DataSource $source
+     * @param Source $source
      */
-    public function removeSource(DataSource $source) {
+    public function removeSource(Source $source) {
         if (!$this->haveSource($source)) {
             return false;
         }
@@ -151,12 +180,12 @@ class Aggregator {
     }
 
     /**
-     * Test if DataSource is already tracked
+     * Test if Source is already tracked
      *
-     * @param DataSource $source
+     * @param Source $source
      * @return boolean
      */
-    public function haveSource(DataSource $source) {
+    public function haveSource(Source $source) {
         $sourceID = $source->getID();
         if (array_key_exists($sourceID, $this->sources)) {
             return true;
@@ -165,28 +194,37 @@ class Aggregator {
     }
 
     /**
-     * Create configured DataWant instance
+     * Create configured Want instance
      *
      * @param string $type
      * @param string $filter
-     * @return DataWant
+     * @return Want
      */
-    public function loadWant($type, $filter) {
-        $want = DataWant::load($type, $filter);
-        $resolved = $this->resolveSource($want);
-        if (!$resolved) {
-            return false;
-        }
+    public function loadWant($class, $type, $filter) {
+        $want = new Want($class, $type, $filter);
         return $want;
     }
 
     /**
-     * Add tracked DataWant
+     * Queue want for resolution
      *
-     * @param DataWant $want
-     * @return DataWant|boolean:false
+     * @param Want $want
+     * @param callback $callback
      */
-    public function addWant(DataWant $want) {
+    public function queueWant(Want $want, callable $callback) {
+        $this->pending[$want->getUID()] = [
+            'want' => $want,
+            'callback' => $callback
+        ];
+    }
+
+    /**
+     * Add tracked Want
+     *
+     * @param Want $want
+     * @return Want|boolean:false
+     */
+    public function addWant(Want $want) {
         if (!$want->isReady()) {
             return false;
         }
@@ -203,12 +241,12 @@ class Aggregator {
     }
 
     /**
-     * Remove tracked DataWant
+     * Remove tracked Want
      *
-     * @param DataWant $want
+     * @param Want $want
      * @param boolean $destroy optional. destroy wants. default true.
      */
-    public function removeWant(DataWant $want, $destroy = true) {
+    public function removeWant(Want $want, $destroy = true) {
         if (!$want->isReady()) {
             return false;
         }
@@ -229,10 +267,10 @@ class Aggregator {
     /**
      * Test if want is already tracked
      *
-     * @param DataWant $want
+     * @param Want $want
      * @return boolean
      */
-    public function haveWant(DataWant $want) {
+    public function haveWant(Want $want) {
         if (!$want->isReady()) {
             return false;
         }
@@ -245,12 +283,12 @@ class Aggregator {
     }
 
     /**
-     * Resolve DataSource for DataWant
+     * Resolve Source for Want
      *
-     * @param DataWant $want
+     * @param Want $want
      * @return boolean
      */
-    protected function resolveSource(DataWant $want) {
+    protected function resolveSource(Want $want) {
         foreach ($this->sources as $source) {
             if (!$source->getType() == $want->getType()) {
                 continue;
@@ -269,6 +307,11 @@ class Aggregator {
      */
     public function tick() {
 
+        // Resolve pending wants
+        if (count($this->pending) && ((time() - $this->store->get(self::KEY_PENDING)) > self::PENDING_CYCLE)) {
+            $this->cyclePending();
+        }
+
         // Collect 'ready' wants
         $ready = $this->collectReady();
 
@@ -278,24 +321,15 @@ class Aggregator {
         }
 
         // Occasionally check if wants should be purged
-        if ((time() - $this->lastPing) > self::WANTED_PING) {
-            $this->rec("testing still wanted");
-            $this->lastPing = time();
-            foreach ($this->wants as $want) {
-                $stillWanted = $want->getStillWanted();
-                $stillWantedStr = $stillWanted ? 'keep' : 'discard';
-                $this->rec(sprintf(" %s -> %s", $want->getID(), $stillWantedStr));
-                if (!$stillWanted) {
-                    $this->removeWant($want);
-                }
-            }
+        if ((time() - $this->store->get(self::KEY_STILLWANTED)) > self::WANTED_CYCLE) {
+            $this->cycleStillWanted();
         }
     }
 
     /**
-     * Collect DataWants that are ready to update
+     * Collect Wants that are ready to update
      *
-     * @return array<DataWant>
+     * @return array<Want>
      */
     public function collectReady() {
         $ready = [];
@@ -305,6 +339,55 @@ class Aggregator {
             }
         }
         return $ready;
+    }
+
+    /**
+     * Cycle pending Wants
+     *
+     * Check if pending wants can now be resolved due to newly connected sources.
+     */
+    public function cyclePending() {
+        $this->rec("resolving wants");
+        $this->store->set(self::KEY_PENDING, time());
+        $pendingKeys = array_keys($this->pending);
+
+        foreach ($pendingKeys as $pendingID) {
+            $pending = $this->pending[$pendingID];
+            $pendingWant = $pending['want'];
+            $resolved = $this->resolveSource($pendingWant);
+            if ($resolved) {
+                $pendingCallback = $pending['callback'];
+                $this->rec(sprintf(" resolved '%s' to '%s'", $pendingID, $pendingWant->getSource()->getID()));
+                $added = $pendingCallback($pendingWant);
+                if ($added === true) {
+                    unset($this->pending[$pendingID]);
+                } else {
+                    $this->rec(" failed to prepare: {$added}");
+                }
+            }
+        }
+    }
+
+    /**
+     * Cycle active Wants
+     *
+     * Check if wants should be discarded due to lack of interest from subscribed
+     * clients.
+     */
+    public function cycleStillWanted() {
+        $this->rec("testing still wanted");
+        $this->store->set(self::KEY_STILLWANTED, time());
+        $wantKeys = array_keys($this->wants);
+
+        foreach ($wantKeys as $wantID) {
+            $want = $this->wants[$wantID];
+            $stillWanted = $want->getStillWanted();
+            $stillWantedStr = $stillWanted ? 'keep' : 'discard';
+            $this->rec(sprintf(" %s -> %s", $want->getID(), $stillWantedStr));
+            if (!$stillWanted) {
+                $this->removeWant($want);
+            }
+        }
     }
 
     /**

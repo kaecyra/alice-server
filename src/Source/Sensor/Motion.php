@@ -5,9 +5,9 @@
  * @copyright 2016 Tim Gunter
  */
 
-namespace Alice\Data\Source;
+namespace Alice\Source\Sensor;
 
-use Alice\Data\DataSource;
+use Alice\Source\SensorSource;
 
 /**
  * ALICE Feature
@@ -15,7 +15,7 @@ use Alice\Data\DataSource;
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-class Calendar extends DataSource {
+class Motion extends SensorSource {
 
     /**
      * Constructor
@@ -26,8 +26,8 @@ class Calendar extends DataSource {
     public function __construct($type, $config) {
         parent::__construct($type, $config);
 
-        $this->provides = [
-            'calendar'
+        $this->satisfies = [
+            'motion'
         ];
     }
 

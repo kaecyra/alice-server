@@ -5,54 +5,66 @@
  * @copyright 2016 Tim Gunter
  */
 
-namespace Alice\Data;
+namespace Alice\Source;
 
 use Alice\Common\Event;
 
-use Alice\Data\DataSource;
+use Alice\Source\Source;
 
 use Exception;
 
 /**
- * ALICE DataWant
+ * ALICE Want
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-class DataWant {
+class Want {
 
     /**
-     * DataWant type
+     * Want class
+     * @var string
+     */
+    protected $class;
+
+    /**
+     * Want type
      * @var string
      */
     protected $type;
 
     /**
-     * DataWant filter
+     * Want filter
      * @var string
      */
     protected $filter;
 
     /**
-     * DataWant config
+     * Randomly generated unique ID
+     * @var string
+     */
+    protected $uid;
+
+    /**
+     * Want config
      * @var array
      */
     protected $config;
 
     /**
-     * DataWant ID
+     * Want ID
      * @var string
      */
     protected $id;
 
     /**
-     * DataSource
-     * @var DataSource
+     * Source
+     * @var Source
      */
     protected $source;
 
     /**
-     * Active want?
+     * Active state
      * @var boolean
      */
     protected $active;
@@ -64,32 +76,24 @@ class DataWant {
     protected $lastUpdated;
 
     /**
-     * DataSource constructor
+     * Want constructor
      *
-     * No direct DataWant instantiation is permitted, must be load()ed.
+     * No direct Want instantiation is permitted, must be load()ed.
      *
+     * @param string $class
      * @param string $type
      * @param string $filter
      */
-    protected function __construct($type, $filter) {
+    public function __construct($class, $type, $filter) {
+        $this->class = $class;
         $this->type = $type;
         $this->filter = $filter;
+
+        $this->uid = uniqid('want', true);
         $this->id = null;
         $this->config = null;
         $this->active = false;
         $this->lastUpdated = 0;
-    }
-
-    /**
-     * Create configured DataWant instance
-     *
-     * @param string $type
-     * @param string $filter
-     * @return \Alice\Data\DataWant
-     * @throws Exception
-     */
-    public static function load($type, $filter) {
-        return new DataWant($type, $filter);
     }
 
     /**
@@ -98,7 +102,7 @@ class DataWant {
      * @return boolean
      */
     public function isReady() {
-        if ($this->source instanceof DataSource && is_array($this->config)) {
+        if ($this->source instanceof Source && is_array($this->config)) {
             return true;
         }
         return false;
@@ -123,7 +127,15 @@ class DataWant {
     }
 
     /**
-     * Get DataWant type
+     * Get Want class
+     * @return string
+     */
+    public function getClass() {
+        return $this->class;
+    }
+
+    /**
+     * Get Want type
      *
      * @return string
      */
@@ -132,7 +144,7 @@ class DataWant {
     }
 
     /**
-     * Get DataWant filter
+     * Get Want filter
      *
      * @return string
      */
@@ -141,7 +153,16 @@ class DataWant {
     }
 
     /**
-     * Get DataWant ID
+     * Get Want UID
+     *
+     * @return string
+     */
+    public function getUID() {
+        return $this->uid;
+    }
+
+    /**
+     * Get Want ID
      *
      * @return string
      */
@@ -157,18 +178,18 @@ class DataWant {
     }
 
     /**
-     * Set DataSource
+     * Set Source
      *
-     * @param DataSource $source
+     * @param Source $source
      */
-    public function setSource(DataSource $source) {
+    public function setSource(Source $source) {
         $this->source = $source;
     }
 
     /**
-     * Get DataSource
+     * Get Source
      *
-     * @return DataSource
+     * @return Source
      */
     public function getSource() {
         return $this->source;
@@ -206,6 +227,9 @@ class DataWant {
      * @return boolean
      */
     public function getShouldUpdate() {
+        if (!$this->isReady()) {
+            return false;
+        }
         return (time() - $this->lastUpdated) > $this->source->getFrequency();
     }
 
@@ -238,7 +262,7 @@ class DataWant {
     }
 
     /**
-     * Pull update from DataSource
+     * Pull update from Source
      *
      * @param boolean $fresh optional. require fresh responses. default true.
      * @return array|boolean:false
@@ -344,7 +368,7 @@ class DataWant {
         if (is_array($message) || is_object($message)) {
             $message = print_r($message, true);
         }
-        rec(sprintf("[datawant: %s] %s", $this->getID(), $message), $level, $options);
+        rec(sprintf("[want: %s] %s", $this->getID(), $message), $level, $options);
     }
 
 }

@@ -7,12 +7,8 @@
 
 namespace Alice\Systems\Mirror;
 
-use Alice\Alice;
-
-use Alice\Common\Event;
-
 use Alice\Socket\SocketMessage;
-use Alice\Server\SocketClient;
+use Alice\Server\UIClient;
 
 use Ratchet\ConnectionInterface;
 
@@ -22,7 +18,7 @@ use Ratchet\ConnectionInterface;
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-class MirrorClient extends SocketClient {
+class MirrorClient extends UIClient {
 
     const MIRROR_AWAKE = '%s.mirror-awake';
     const MIRROR_ASLEEP = '%s.mirror-asleep';
@@ -35,16 +31,14 @@ class MirrorClient extends SocketClient {
     protected $settings;
 
     /**
-     * Mirror connectors
-     * @var array<DataWant>
+     * Mirror Client Constructor
+     *
+     * @param ConnectionInterface $connection
      */
-    protected $connectors;
-
     public function __construct(ConnectionInterface $connection) {
         parent::__construct($connection);
 
         $this->settings = [];
-        $this->connectors = [];
     }
 
     /**
@@ -89,22 +83,11 @@ class MirrorClient extends SocketClient {
 
         // Data Connectors
         $connectors = val('sources', $data);
-        $required = ['type', 'filter'];
-        if (is_array($connectors) && count($connectors)) {
-            foreach ($connectors as $connector) {
-                foreach ($required as $requiredField) {
-                    if (!array_key_exists($requiredField, $connector)) {
-                        $this->rec($connector);
-                        $this->sendError("  ignoring malforumed connector ({$connector['type']}), no '{$requiredField}'");
-                        continue;
-                    }
-                }
-                $registered = $this->registerConnector($connector);
-                if ($registered !== true) {
-                    $this->sendError("  connector ({$connector['type']}) failed to register: {$registered}");
-                }
-            }
-        }
+        $this->queueDataConnectors($connectors);
+
+        // Sensors
+        $sensors = val('sensors', $data);
+        $this->queueSensorConnectors($sensors);
 
         // Let the mirror know that registration was successful
         $this->sendMessage('registered');
@@ -142,70 +125,6 @@ class MirrorClient extends SocketClient {
         $this->rec(" mirror asked to be woken up");
         sleep(1);
         $this->wake();
-    }
-
-    /**
-     * Register a data connector on this mirror
-     *
-     * @param array $connector
-     * @return string|boolean:true string error or boolean true success
-     */
-    protected function registerConnector($connector) {
-        $sourceType = $connector['type'];
-        $sourceFilter = $connector['filter'];
-
-        // Get DataWant instance
-        $want = Alice::go()->aggregator()->loadWant($sourceType, $sourceFilter);
-        if (!$want) {
-            return "could not resolve source";
-        }
-
-        $this->rec("registering connector: ".$want->getID());
-
-        $requiredFields = $want->getRequiredFields();
-
-        $fieldAliases = [
-            'city' => 'location.city',
-            'units' => 'location.units',
-            'latitude' => 'location.latitude',
-            'longitude' => 'location.longitude'
-        ];
-
-        $connectorConfig = val('config', $connector, []);
-        if (!is_array($connectorConfig)) {
-            $connectorConfig = [];
-        }
-
-        // Allow intelligent re-use of client config settings for data connectors
-        foreach ($requiredFields as $requiredField) {
-            // If this setting isn't defined in the connector config
-            if (!array_key_exists($requiredField, $connectorConfig)) {
-                // And we know how to find it in the client config
-                if (array_key_exists($requiredField, $fieldAliases)) {
-                    // Load it from there
-                    $connectorConfig[$requiredField] = valr($fieldAliases[$requiredField], $this->settings);
-                }
-            }
-
-            if (!array_key_exists($requiredField, $connectorConfig)) {
-                return "missing config '{$requiredField}'";
-            }
-        }
-
-        // Push config to DataWant and aggregate
-        $want->setConfig($connectorConfig);
-        $want = Alice::go()->aggregator()->addWant($want);
-        if (!$want) {
-            return "could not add connector to aggregator";
-        }
-
-        // Register data collection event hook
-        $this->hook($want->getEventID(), [$this, "update"]);
-
-        // Remember want
-        $wantID = $want->getID();
-        $this->connectors[$wantID] = $want;
-        return true;
     }
 
     /**

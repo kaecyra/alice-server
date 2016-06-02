@@ -15,7 +15,8 @@ use Alice\Common\Event;
 
 use Alice\Server\SocketDispatcher;
 
-use Alice\Data\Aggregator;
+use Alice\Source\Aggregator;
+use Alice\Source\Source;
 
 use React\EventLoop\Factory as LoopFactory;
 
@@ -35,7 +36,7 @@ class Alice implements App {
 
     /**
      * Data aggregator
-     * @var \Alice\Data\Aggregator
+     * @var \Alice\Source\Aggregator
      */
     protected $aggregator;
 
@@ -113,7 +114,7 @@ class Alice implements App {
                 continue;
             }
 
-            $dataSource = Aggregator::loadSource($sourceType, $source);
+            $dataSource = Aggregator::loadSource(Source::CLASS_DATA, $sourceType, $source);
             if (!$dataSource) {
                 rec("  unknown data source: {$sourceType}");
                 continue;
@@ -138,7 +139,7 @@ class Alice implements App {
     /**
      * Get aggregator
      *
-     * @return Alice\Data\Aggregator
+     * @return \Alice\Source\Aggregator
      */
     public function aggregator() {
         return $this->aggregator;

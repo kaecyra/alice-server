@@ -5,9 +5,9 @@
  * @copyright 2016 Tim Gunter
  */
 
-namespace Alice\Data\Source;
+namespace Alice\Source\Data;
 
-use Alice\Data\DataSource;
+use Alice\Source\DataSource;
 
 /**
  * ALICE Feature

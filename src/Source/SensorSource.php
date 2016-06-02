@@ -5,80 +5,40 @@
  * @copyright 2016 Tim Gunter
  */
 
-namespace Alice\Data;
+namespace Alice\Source;
 
 use Exception;
 
 /**
- * ALICE DataSource Base
+ * ALICE SensorSource Base
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-abstract class DataSource {
+abstract class SensorSource extends Source {
 
     /**
-     * DataSource type
-     * @var string
-     */
-    protected $type;
-
-    /**
-     * DataSource config
-     * @var array
-     */
-    protected $config;
-
-    /**
-     * DataSource ID
-     * @var string
-     */
-    protected $id;
-
-    /**
-     * DataSource satisfies
-     * @var array
-     */
-    protected $satisfies;
-
-    /**
-     * Filter requirements
-     * @var array
-     */
-    protected $requirements;
-
-    /**
-     * How many seconds between queries
-     * @var integer
-     */
-    protected $frequency;
-
-    /**
-     * DataSource constructor
+     * SensorSource constructor
      *
-     * No direct DataSource instantiation is permitted, must be load()ed.
-     *
-     * @param array $config
-     */
-    protected function __construct($type, $config) {
-        $this->type = $type;
-        $this->config = $config;
-        $this->satisfies = val('satisfies', $config);
-        $this->frequency = 30;
-
-        $this->id = $this->buildID();
-    }
-
-    /**
-     * Create configured DataSource instance
+     * No direct SensorSource instantiation is permitted, must be load()ed.
      *
      * @param string $type
      * @param array $config
-     * @return \Alice\Data\DataSource
+     */
+    protected function __construct($type, $config) {
+        parent::__construct($type, $config);
+    }
+
+    /**
+     * Create configured SensorSource instance
+     *
+     * @param string $type
+     * @param array $config
+     * @return \Alice\Source\SensorSource
      * @throws Exception
      */
     public static function load($type, $config) {
-        $ns = "\Alice\Data\Source";
+        $ns = "\\Alice\\Source\\Sensor";
         $feature = ucfirst($type);
         $full = "{$ns}\\{$feature}";
         if (!class_exists($full)) {
@@ -89,7 +49,7 @@ abstract class DataSource {
     }
 
     /**
-     * Get DataSource type
+     * Get SensorSource type
      *
      * @return string
      */
@@ -98,7 +58,7 @@ abstract class DataSource {
     }
 
     /**
-     * Get DataSource ID
+     * Get SensorSource ID
      *
      * @return string
      */
@@ -107,7 +67,7 @@ abstract class DataSource {
     }
 
     /**
-     * Get default DataSource ID
+     * Get default SensorSource ID
      *
      * @return string
      */
@@ -117,7 +77,7 @@ abstract class DataSource {
     }
 
     /**
-     * Check if this DataSource can satisfy a filter
+     * Check if this SensorSource can satisfy a filter
      *
      * @param string $filter
      * @return boolean
@@ -177,14 +137,5 @@ abstract class DataSource {
      * @return string
      */
     abstract protected function buildWantID($filter, $config);
-
-    /**
-     * Fetch update
-     *
-     * @param string $filter
-     * @param array $config
-     * @return array
-     */
-    abstract public function fetch($filter, $config);
 
 }

@@ -60,7 +60,7 @@ class Weather extends DataSource {
                 $hash = substr(sha1($hashData), 0, 16);
                 break;
         }
-        return "{$this->type}/{$filter}-{$hash}";
+        return "{$this->class}:{$this->type}/{$filter}-{$hash}";
     }
 
     /**

@@ -7,6 +7,8 @@
 
 namespace Alice\Source;
 
+use Alice\Common\Event;
+
 use Exception;
 
 /**
@@ -27,6 +29,8 @@ abstract class SensorSource extends Source {
      */
     protected function __construct($type, $config) {
         parent::__construct($type, $config);
+        $this->id = val('id', $config);
+        $this->class = Source::CLASS_SENSOR;
     }
 
     /**
@@ -72,8 +76,7 @@ abstract class SensorSource extends Source {
      * @return string
      */
     protected function buildID() {
-        $source = val('source', $this->config);
-        return "{$this->type}-{$source}";
+        return val('id', $this->config);
     }
 
     /**
@@ -90,29 +93,19 @@ abstract class SensorSource extends Source {
     }
 
     /**
-     * Get list of required fields for source filter
+     * Deploy sensor data
      *
-     * @param string $filter
-     * @return array
+     * @param mixed $data
      */
-    public function getRequiredFields($filter) {
-        $requirements = [];
-        if (array_key_exists('base', $this->requirements)) {
-            $requirements = array_merge($requirements, $this->requirements['base']);
-        }
-        if (array_key_exists($filter, $this->requirements)) {
-            $requirements = array_merge($requirements, $this->requirements[$filter]);
-        }
-        return array_unique($requirements);
-    }
+    abstract public function pushData($data);
 
     /**
-     * Get update frequency
+     * Get event ID
      *
-     * @return integer
+     * @return string
      */
-    public function getFrequency() {
-        return $this->frequency;
+    public function getEventID() {
+        return "dataevent-{$this->class}:{$this->type}/{$this->id}";
     }
 
     /**
@@ -126,7 +119,7 @@ abstract class SensorSource extends Source {
         if (is_array($message) || is_object($message)) {
             $message = print_r($message, true);
         }
-        rec(sprintf("[datasource: %s] %s", $this->getID(), $message), $level, $options);
+        rec(sprintf("[sensorsource: %s] %s", $this->getID(), $message), $level, $options);
     }
 
     /**

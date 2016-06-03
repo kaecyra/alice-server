@@ -21,25 +21,31 @@ abstract class Source {
     const CLASS_SENSOR = 'sensor';
 
     /**
-     * DataSource type
+     * Source Class
+     * @var string
+     */
+    protected $class;
+
+    /**
+     * Source type
      * @var string
      */
     protected $type;
 
     /**
-     * DataSource config
+     * Source config
      * @var array
      */
     protected $config;
 
     /**
-     * DataSource ID
+     * Source ID
      * @var string
      */
     protected $id;
 
     /**
-     * SensorSource satisfies
+     * Source satisfies
      * @var array
      */
     protected $satisfies;
@@ -56,6 +62,15 @@ abstract class Source {
         $this->type = $type;
         $this->config = $config;
         $this->id = $this->buildID();
+    }
+
+    /**
+     * Get Source class
+     *
+     * @return string
+     */
+    public function getClass() {
+        return $this->class;
     }
 
     /**

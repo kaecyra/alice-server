@@ -68,17 +68,29 @@ abstract class UIClient extends SocketClient {
     protected function queueGenericConnectors($connectors, $class) {
         if (is_array($connectors) && count($connectors)) {
             $this->rec("queuing {$class} connectors");
-            $required = ['type', 'filter'];
+            $required = [];
+            switch ($class) {
+                case Source::CLASS_DATA:
+                    $required = ['type', 'filter'];
+                    break;
+                case Source::CLASS_SENSOR:
+                    $required = ['type', 'id'];
+                    break;
+            }
             foreach ($connectors as $connector) {
+                $ok = true;
                 foreach ($required as $requiredField) {
                     if (!array_key_exists($requiredField, $connector)) {
                         $this->rec($connector);
                         $this->sendError(" ignoring malforumed connector ({$class}:{$connector['type']}), no '{$requiredField}'");
-                        continue;
+                        $ok = false;
+                        break;
                     }
                 }
 
-                $this->queueConnector($connector, $class);
+                if ($ok) {
+                    $this->queueConnector($connector, $class);
+                }
             }
         }
     }
@@ -92,6 +104,9 @@ abstract class UIClient extends SocketClient {
      */
     protected function queueConnector($connector, $class) {
         $sourceType = $connector['type'];
+        if ($class == Source::CLASS_SENSOR) {
+            $connector['filter'] = $connector['id'];
+        }
         $sourceFilter = $connector['filter'];
 
         // Get DataWant instance
@@ -108,6 +123,51 @@ abstract class UIClient extends SocketClient {
      * @return boolean|string
      */
     public function prepareWant(Want $want) {
+        switch ($want->getClass()) {
+            case Source::CLASS_DATA:
+                $prepared = $this->prepareDataWant($want);
+                break;
+
+            case Source::CLASS_SENSOR:
+                $prepared = $this->prepareSensorWant($want);
+                break;
+        }
+        if ($prepared !== true) {
+            return $prepared;
+        }
+
+        $want = Alice::go()->aggregator()->addWant($want);
+        if (!$want) {
+            return "could not add connector to aggregator";
+        }
+
+        $wantID = $want->getID();
+        switch ($want->getClass()) {
+            case Source::CLASS_DATA:
+                // Register data collection event hook
+                $this->hook($want->getEventID(), [$this, "update"]);
+
+                // Remember want
+                $this->connectors[$wantID] = $want;
+                break;
+
+            case Source::CLASS_SENSOR:
+                // Register sensor event hook
+                $this->hook($want->getEventID(), [$this, "sense"]);
+
+                // Remember want
+                $this->sensors[$wantID] = $want;
+                break;
+        }
+
+        return true;
+    }
+
+    /**
+     *
+     * @param Want $want
+     */
+    protected function prepareDataWant(Want $want) {
         $connector = $want->getConfig();
         $want->setConfig(null);
 
@@ -143,29 +203,14 @@ abstract class UIClient extends SocketClient {
 
         // Push config to DataWant and aggregate
         $want->setConfig($connectorConfig);
-        $want = Alice::go()->aggregator()->addWant($want);
-        if (!$want) {
-            return "could not add connector to aggregator";
-        }
+        return true;
+    }
 
-        $wantID = $want->getID();
-        switch ($want->getClass()) {
-            case Source::CLASS_DATA:
-                // Register data collection event hook
-                $this->hook($want->getEventID(), [$this, "update"]);
-
-                // Remember want
-                $this->connectors[$wantID] = $want;
-                break;
-
-            case Source::CLASS_SENSOR:
-                // Register sensor event hook
-                $this->hook($want->getEventID(), [$this, "sense"]);
-
-                // Remember want
-                $this->sensors[$wantID] = $want;
-                break;
-        }
+    /**
+     *
+     * @param Want $want
+     */
+    protected function prepareSensorWant(Want $want) {
         return true;
     }
 

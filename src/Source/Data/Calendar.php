@@ -41,7 +41,7 @@ class Calendar extends DataSource {
     public function buildWantID($filter, $config) {
         $hashData = formatString("{city}", $config);
         $hash = substr(sha1($hashData), 0, 16);
-        return "{$this->type}/{$filter}-{$hash}";
+        return "{$this->class}:{$this->type}/{$filter}-{$hash}";
     }
 
     /**

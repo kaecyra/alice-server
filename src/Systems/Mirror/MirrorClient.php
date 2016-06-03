@@ -160,6 +160,75 @@ class MirrorClient extends UIClient {
     }
 
     /**
+     * Event hook: sensor event
+     *
+     * When a sensorsource sends an event, interested clients will receive a call
+     * to 'sense'.
+     *
+     * @param string $sourceType
+     * @param string $sourceID
+     * @param mixed $data
+     */
+    public function sense($sourceType, $sourceID, $data) {
+        $this->rec("received sensor data: {$sourceType}/{$sourceID}");
+        switch ($sourceType) {
+            case 'motion':
+                if ($data == 'still') {
+                    $this->still();
+                }
+                if ($data == 'motion') {
+                    $this->motion();
+                }
+                break;
+        }
+    }
+
+    /**
+     * Hook motion event
+     *
+     * Alice has detected motion, so handle it here by waking the mirror and
+     * locking in our guaranteed wake period with 'dimafter'.
+     *
+     */
+    public function motion() {
+
+        $dimAfter = val('dimafter', $this->settings);
+        $dimAt = time() + $dimAfter;
+        apcu_store($this->getCacheKey(self::MIRROR_LOCKDIM), $dimAt, $dimAfter);
+
+        // Got motion, wake the mirror
+        $this->wake();
+
+    }
+
+    /**
+     * Hook still event
+     *
+     * Alice has detected no motion, so the mirror must decide if that means we
+     * need to dim the display. This is based on whether there is a still a
+     * mutex keeping the display on, or not.
+     *
+     */
+    public function still() {
+
+        $dimLock = apcu_fetch($this->getCacheKey(self::MIRROR_LOCKDIM));
+        if ($dimLock) {
+            if ($dimLock > time()) {
+                $lockedFor = $dimLock - time();
+                $this->rec("still lockout, {$lockedFor}s left");
+                return;
+            }
+
+            // Lock failed to remove via TTL, remove manually
+            apcu_delete($this->getCacheKey(self::MIRROR_LOCKDIM));
+        }
+
+        // No motion for $dimAfter seconds, sleep
+        $this->sleep();
+
+    }
+
+    /**
      * Get namespaced cache key
      *
      * @param string $key
@@ -261,51 +330,6 @@ class MirrorClient extends UIClient {
      */
     public function unhibernate() {
         $this->wake();
-    }
-
-    /**
-     * Hook motion event
-     *
-     * Alice has detected motion, so handle it here by waking the mirror and
-     * locking in our guaranteed wake period with 'dimafter'.
-     *
-     */
-    public function motion() {
-
-        $dimAfter = val('dimafter', $this->settings);
-        $dimAt = time() + $dimAfter;
-        apcu_store($this->getCacheKey(self::MIRROR_LOCKDIM), $dimAt, $dimAfter);
-
-        // Got motion, wake the mirror
-        $this->wake();
-
-    }
-
-    /**
-     * Hook still event
-     *
-     * Alice has detected no motion, so the mirror must decide if that means we
-     * need to dim the display. This is based on whether there is a still a
-     * mutex keeping the display on, or not.
-     *
-     */
-    public function still() {
-
-        $dimLock = apcu_fetch($this->getCacheKey(self::MIRROR_LOCKDIM));
-        if ($dimLock) {
-            if ($dimLock > time()) {
-                $lockedFor = $dimLock - time();
-                $this->rec("still lockout, {$lockedFor}s left");
-                return;
-            }
-
-            // Lock failed to remove via TTL, remove manually
-            apcu_delete($this->getCacheKey(self::MIRROR_LOCKDIM));
-        }
-
-        // No motion for $dimAfter seconds, sleep
-        $this->sleep();
-
     }
 
 }

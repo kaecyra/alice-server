@@ -39,18 +39,26 @@ class Motion extends SensorSource {
      * @return string
      */
     public function buildWantID($filter, $config) {
-        $hashData = formatString("{city}", $config);
-        $hash = substr(sha1($hashData), 0, 16);
-        return "{$this->type}/{$filter}-{$hash}";
+        return "{$this->class}:{$this->type}/{$this->id}";
     }
 
     /**
-     * Fetch updated calendar
-     *
-     * @param array $config
+     * Get data
+     * 
+     * @param string $data
      */
-    public function fetch($config) {
-        return \Alice\API\Calendar::get($config, $this->config);
+    public function pushData($data) {
+        Event::fire($this->getEventID(), [$this->type, $this->id, $data]);
+    }
+
+    /**
+     * Get namespaced cache key
+     *
+     * @param string $key
+     * @return string
+     */
+    protected function getCacheKey($key) {
+        return sprintf($key, $this->name);
     }
 
 }

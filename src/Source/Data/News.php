@@ -63,7 +63,7 @@ class News extends DataSource {
                 $hash = "global";
                 break;
         }
-        return "{$this->type}/{$filter}-{$hash}";
+        return "{$this->class}:{$this->type}/{$filter}-{$hash}";
     }
 
     /**

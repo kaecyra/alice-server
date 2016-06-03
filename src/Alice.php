@@ -105,7 +105,7 @@ class Alice implements App {
         $client = $this->config->get('data.client');
         $this->aggregator->setClientConfiguration($client);
 
-        // Add sources to aggregator
+        // Add data sources to aggregator
         rec(' adding data sources');
         foreach ($this->config->get('data.sources') as $source) {
             $sourceType = val('type', $source);

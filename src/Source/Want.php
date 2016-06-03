@@ -230,7 +230,15 @@ class Want {
         if (!$this->isReady()) {
             return false;
         }
-        return (time() - $this->lastUpdated) > $this->source->getFrequency();
+        
+        switch ($this->class) {
+            case Source::CLASS_DATA:
+                return (time() - $this->lastUpdated) > $this->source->getFrequency();
+                break;
+            case Source::CLASS_SENSOR:
+                return false;
+                break;
+        }
     }
 
     /**

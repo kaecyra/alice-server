@@ -11,6 +11,9 @@ use Alice\Alice;
 
 use Alice\Common\Event;
 
+use Alice\Source\Source;
+use Alice\Source\Sensor\Motion;
+
 use Alice\Socket\SocketMessage;
 use Alice\Server\SocketClient;
 
@@ -34,6 +37,12 @@ class SensorClient extends SocketClient {
      * @var array
      */
     protected $settings;
+
+    /**
+     * Client source
+     * @var Source
+     */
+    protected $source;
 
     /**
      * Handle sensor registrations
@@ -71,6 +80,11 @@ class SensorClient extends SocketClient {
         }
         $this->settings = $settings;
 
+        // Create source
+        $type = val('type', $data);
+        $this->source = Alice::go()->aggregator()->loadSource(Source::CLASS_SENSOR, $type, $data);
+        Alice::go()->aggregator()->addSource($this->source);
+
         // Let the sensor know that registration was successful
         $this->sendMessage('registered');
     }
@@ -83,61 +97,17 @@ class SensorClient extends SocketClient {
     public function message_sensor(SocketMessage $message) {
         $sensed = $message->getData();
         $this->rec("sensor: {$sensed}");
+        $this->source->pushData($sensed);
     }
 
     /**
-     * Get namespaced cache key
-     *
-     * @param string $key
-     * @return string
-     */
-    protected function getCacheKey($key) {
-        return sprintf($key, $this->name);
-    }
-
-    /**
-     * Hook motion event
-     *
-     * Alice has detected motion, so handle it here by waking the mirror and
-     * locking in our guaranteed wake period with 'dimafter'.
+     * Cleanup
      *
      */
-    public function motion() {
-
-        $dimAfter = val('dimafter', $this->settings);
-        $dimAt = time() + $dimAfter;
-        apcu_store($this->getCacheKey(self::MIRROR_LOCKDIM), $dimAt, $dimAfter);
-
-        // Got motion, wake the mirror
-        $this->wake();
-
-    }
-
-    /**
-     * Hook still event
-     *
-     * Alice has detected no motion, so the mirror must decide if that means we
-     * need to dim the display. This is based on whether there is a still a
-     * mutex keeping the display on, or not.
-     *
-     */
-    public function still() {
-
-        $dimLock = apcu_fetch($this->getCacheKey(self::MIRROR_LOCKDIM));
-        if ($dimLock) {
-            if ($dimLock > time()) {
-                $lockedFor = $dimLock - time();
-                $this->rec("still lockout, {$lockedFor}s left");
-                return;
-            }
-
-            // Lock failed to remove via TTL, remove manually
-            apcu_delete($this->getCacheKey(self::MIRROR_LOCKDIM));
+    public function __destruct() {
+        if ($this->source instanceof Source) {
+            Alice::go()->aggregator()->removeSource($this->source);
         }
-
-        // No motion for $dimAfter seconds, sleep
-        $this->sleep();
-
     }
 
 }

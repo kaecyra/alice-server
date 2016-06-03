@@ -39,6 +39,7 @@ abstract class DataSource extends Source {
      */
     protected function __construct($type, $config) {
         parent::__construct($type, $config);
+        $this->class = Source::CLASS_DATA;
 
         $this->satisfies = val('satisfies', $config);
         $this->frequency = 30;

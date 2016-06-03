@@ -45,10 +45,16 @@ class Aggregator {
     protected $store;
 
     /**
-     * List of Source objects
-     * @var array<Source>
+     * List of DataSource objects
+     * @var array<DataSource>
      */
-    protected $sources;
+    protected $datasources;
+
+    /**
+     * List of SensorSource objects
+     * @var array<SensorSource>
+     */
+    protected $sensorsources;
 
     /**
      * List of Want objects
@@ -84,7 +90,8 @@ class Aggregator {
         $this->store = new Store;
 
         // Sources list
-        $this->sources = [];
+        $this->datasources = [];
+        $this->sensorsources = [];
 
         // Wants list
         $this->wants = [];
@@ -133,11 +140,11 @@ class Aggregator {
      */
     public static function loadSource($class, $type, $config) {
         switch ($class) {
-            case 'data':
+            case Source::CLASS_DATA:
                 return DataSource::load($type, $config);
                 break;
 
-            case 'sensor':
+            case Source::CLASS_SENSOR:
                 return SensorSource::load($type, $config);
                 break;
 
@@ -156,12 +163,21 @@ class Aggregator {
      */
     public function addSource(Source $source) {
         $sourceID = $source->getID();
+        switch ($source->getClass()) {
+            case Source::CLASS_DATA:
+                if (!$this->haveSource($source)) {
+                    $this->datasources[$sourceID] = $source;
+                }
+                return $this->datasources[$sourceID];
+                break;
 
-        if (!$this->haveSource($source)) {
-            $this->sources[$sourceID] = $source;
+            case Source::CLASS_SENSOR:
+                if (!$this->haveSource($source)) {
+                    $this->sensorsources[$sourceID] = $source;
+                }
+                return $this->sensorsources[$sourceID];
+                break;
         }
-
-        return $this->sources[$sourceID];
     }
 
     /**
@@ -175,7 +191,16 @@ class Aggregator {
         }
 
         $sourceID = $source->getID();
-        unset($this->sources[$sourceID]);
+        switch ($source->getClass()) {
+            case Source::CLASS_DATA:
+                unset($this->datasources[$sourceID]);
+                break;
+
+            case Source::CLASS_SENSOR:
+                unset($this->sensorsources[$sourceID]);
+                break;
+        }
+
         return true;
     }
 
@@ -187,7 +212,10 @@ class Aggregator {
      */
     public function haveSource(Source $source) {
         $sourceID = $source->getID();
-        if (array_key_exists($sourceID, $this->sources)) {
+        if (array_key_exists($sourceID, $this->datasources)) {
+            return true;
+        }
+        if (array_key_exists($sourceID, $this->sensorsources)) {
             return true;
         }
         return false;
@@ -289,15 +317,31 @@ class Aggregator {
      * @return boolean
      */
     protected function resolveSource(Want $want) {
-        foreach ($this->sources as $source) {
-            if (!$source->getType() == $want->getType()) {
-                continue;
-            }
+        $this->rec("resolve source for ".$want->getUID()." (".$want->getClass().":".$want->getType()."/".$want->getFilter().")");
+        switch ($want->getClass()) {
+            case Source::CLASS_DATA:
+                foreach ($this->datasources as $source) {
+                    if ($source->getType() != $want->getType()) {
+                        continue;
+                    }
+                    if ($source->canSatisfy($want->getFilter())) {
+                        $want->setSource($source);
+                        return true;
+                    }
+                }
+                break;
 
-            if ($source->canSatisfy($want->getFilter())) {
-                $want->setSource($source);
-                return true;
-            }
+            case Source::CLASS_SENSOR:
+                foreach ($this->sensorsources as $source) {
+                    if ($source->getType() != $want->getType()) {
+                        continue;
+                    }
+                    if ($source->getID() == $want->getFilter()) {
+                        $want->setSource($source);
+                        return true;
+                    }
+                }
+                break;
         }
         return false;
     }
@@ -347,7 +391,6 @@ class Aggregator {
      * Check if pending wants can now be resolved due to newly connected sources.
      */
     public function cyclePending() {
-        $this->rec("resolving wants");
         $this->store->set(self::KEY_PENDING, time());
         $pendingKeys = array_keys($this->pending);
 

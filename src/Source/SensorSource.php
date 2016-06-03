@@ -97,7 +97,9 @@ abstract class SensorSource extends Source {
      *
      * @param mixed $data
      */
-    abstract public function pushData($data);
+    public function pushData($data) {
+        Event::fire($this->getEventID(), [$this->type, $this->id, $data]);
+    }
 
     /**
      * Get event ID

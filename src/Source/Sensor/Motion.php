@@ -43,15 +43,6 @@ class Motion extends SensorSource {
     }
 
     /**
-     * Get data
-     * 
-     * @param string $data
-     */
-    public function pushData($data) {
-        Event::fire($this->getEventID(), [$this->type, $this->id, $data]);
-    }
-
-    /**
      * Get namespaced cache key
      *
      * @param string $key

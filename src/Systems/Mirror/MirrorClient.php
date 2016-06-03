@@ -192,7 +192,7 @@ class MirrorClient extends UIClient {
      */
     public function motion() {
 
-        $dimAfter = val('dimafter', $this->settings);
+        $dimAfter = val('dim', $this->settings);
         $dimAt = time() + $dimAfter;
         apcu_store($this->getCacheKey(self::MIRROR_LOCKDIM), $dimAt, $dimAfter);
 
@@ -246,7 +246,7 @@ class MirrorClient extends UIClient {
      */
     public function sleep($force = false) {
 
-        $tzName = val('timezone', $this->settings);
+        $tzName = valr('location.timezone', $this->settings);
         $tz = new \DateTimeZone($tzName);
         $date = new \DateTime('now', $tz);
         $time = $date->getTimestamp();
@@ -285,7 +285,7 @@ class MirrorClient extends UIClient {
      */
     public function wake($force = false) {
 
-        $tzName = val('timezone', $this->settings);
+        $tzName = valr('location.timezone', $this->settings);
         $tz = new \DateTimeZone($tzName);
         $date = new \DateTime('now', $tz);
         $time = $date->getTimestamp();

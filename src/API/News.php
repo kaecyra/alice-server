@@ -81,13 +81,17 @@ class News extends API {
                 }
 
                 $data = $result['data'];
+
                 $title = html_entity_decode($data['title']);
                 if (strlen($title) > $width) {
-                    $title = substr($title, 0, strpos($title, ' ', $width - 3)).'...';
+                    $nearestSpace = strpos($title, ' ', $width - 3);
+                    if ($nearestSpace) {
+                        $title = substr($title, 0, strpos($title, ' ', $width - 3)).'...';
+                    }
                 }
 
                 $news[] = [
-                    'title' => html_entity_decode($title),
+                    'title' => $title,
                     'url' => $data['url'],
                     'source' => $data['domain'],
                     'id' => $data['name'],

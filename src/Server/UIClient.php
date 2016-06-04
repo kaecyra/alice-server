@@ -33,12 +33,20 @@ abstract class UIClient extends SocketClient {
      */
     protected $sensors;
 
+    /**
+     * Pending Wants
+     * @var array<Want>
+     */
+    protected $pending;
 
     public function __construct(\Ratchet\ConnectionInterface $connection) {
         parent::__construct($connection);
 
         $this->connectors = [];
         $this->sensors = [];
+        $this->pending = [];
+
+        $this->hook('cyclepending', [$this, 'cyclePending']);
     }
 
     /**
@@ -112,7 +120,11 @@ abstract class UIClient extends SocketClient {
         // Get DataWant instance
         $want = Alice::go()->aggregator()->loadWant($class, $sourceType, $sourceFilter);
         $want->setConfig($connector);
-        Alice::go()->aggregator()->queueWant($want, [$this, 'prepareWant']);
+
+        $this->pending[$want->getUID()] = [
+            'want' => $want,
+            'callback' => [$this, 'prepareWant']
+        ];
         $this->rec(" queued connector: ".$want->getUID());
     }
 
@@ -212,6 +224,27 @@ abstract class UIClient extends SocketClient {
      */
     protected function prepareSensorWant(Want $want) {
         return true;
+    }
+
+    /**
+     * Hook 'wantspending' and return list of pending wants
+     *
+     */
+    public function cyclePending() {
+        if (!count($this->pending)) {
+            return;
+        }
+
+        $this->rec("cycle ".count($this->pending)." pending wants");
+        $pendingKeys = array_keys($this->pending);
+        foreach ($pendingKeys as $pendingID) {
+            $pending = $this->pending[$pendingID];
+            $added = Alice::go()->aggregator()->resolvePendingWant($pending['want'], $pending['callback']);
+
+            if ($added) {
+                unset($this->pending[$pendingID]);
+            }
+        }
     }
 
 }

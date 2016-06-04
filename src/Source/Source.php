@@ -127,4 +127,12 @@ abstract class Source {
         }
         rec(sprintf("[source: %s] %s", $this->getID(), $message), $level, $options);
     }
+
+    /**
+     * Source destructor
+     * 
+     */
+    public function __destruct() {
+        $this->rec("shutting down");
+    }
 }

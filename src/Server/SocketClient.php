@@ -173,13 +173,12 @@ abstract class SocketClient {
      * @param SocketMessage $message
      */
     public function onMessage(SocketMessage $message) {
-        $this->rec("received message: ".$message->getMethod());
-
         // Route to message handler
         $call = 'message_'.$message->getMethod();
         if (is_callable([$this, $call])) {
             $this->$call($message);
         } else {
+            $this->rec("received message: ".$message->getMethod());
             $this->rec(sprintf(" could not handle message: unknown type '{%s}'", $message->getMethod()));
         }
     }

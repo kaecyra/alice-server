@@ -170,6 +170,12 @@ class MirrorClient extends UIClient {
      * @param mixed $data
      */
     public function sense($sourceType, $sourceID, $data) {
+
+        // Handle 'still wanted' pings
+        if ($data == 'ping') {
+            return true;
+        }
+        
         $this->rec("received sensor data: {$sourceType}/{$sourceID}");
         switch ($sourceType) {
             case 'motion':

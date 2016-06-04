@@ -63,12 +63,6 @@ class Aggregator {
     protected $wants;
 
     /**
-     * Pending wants
-     * @var array<Want>
-     */
-    protected $pending;
-
-    /**
      * Aggregator client config
      * @var array
      */
@@ -234,19 +228,6 @@ class Aggregator {
     }
 
     /**
-     * Queue want for resolution
-     *
-     * @param Want $want
-     * @param callback $callback
-     */
-    public function queueWant(Want $want, callable $callback) {
-        $this->pending[$want->getUID()] = [
-            'want' => $want,
-            'callback' => $callback
-        ];
-    }
-
-    /**
      * Add tracked Want
      *
      * @param Want $want
@@ -311,6 +292,31 @@ class Aggregator {
     }
 
     /**
+     * Resolve pending want
+     *
+     * @param Want $want
+     * @param callable $callback
+     */
+    public function resolvePendingWant($want, callable $callback) {
+        $pendingID = $want->getUID();
+        $resolved = $this->resolveSource($want);
+        if (!$resolved) {
+            return false;
+        }
+
+        $pendingCallback = $callback;
+        $this->rec(sprintf(" resolved '%s' to '%s'", $pendingID, $want->getSource()->getID()));
+        $added = $pendingCallback($want);
+
+        if ($added !== true) {
+            $this->rec(" failed to prepare: {$added}");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Resolve Source for Want
      *
      * @param Want $want
@@ -352,7 +358,7 @@ class Aggregator {
     public function tick() {
 
         // Resolve pending wants
-        if (count($this->pending) && ((time() - $this->store->get(self::KEY_PENDING)) > self::PENDING_CYCLE)) {
+        if ((time() - $this->store->get(self::KEY_PENDING)) > self::PENDING_CYCLE) {
             $this->cyclePending();
         }
 
@@ -392,23 +398,7 @@ class Aggregator {
      */
     public function cyclePending() {
         $this->store->set(self::KEY_PENDING, time());
-        $pendingKeys = array_keys($this->pending);
-
-        foreach ($pendingKeys as $pendingID) {
-            $pending = $this->pending[$pendingID];
-            $pendingWant = $pending['want'];
-            $resolved = $this->resolveSource($pendingWant);
-            if ($resolved) {
-                $pendingCallback = $pending['callback'];
-                $this->rec(sprintf(" resolved '%s' to '%s'", $pendingID, $pendingWant->getSource()->getID()));
-                $added = $pendingCallback($pendingWant);
-                if ($added === true) {
-                    unset($this->pending[$pendingID]);
-                } else {
-                    $this->rec(" failed to prepare: {$added}");
-                }
-            }
-        }
+        Event::fire('cyclepending');
     }
 
     /**

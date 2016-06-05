@@ -22,7 +22,10 @@ class MirrorClient extends UIClient {
 
     const MIRROR_AWAKE = '%s.mirror-awake';
     const MIRROR_ASLEEP = '%s.mirror-asleep';
+    const MIRROR_HIBERNATE = '%s.mirror-hibernating';
     const MIRROR_LOCKDIM = '%s.mirror-lockdim';
+
+    const HIBERNATE_TIME = 120;
 
     /**
      * Mirror settings (from client)
@@ -258,6 +261,15 @@ class MirrorClient extends UIClient {
         // If we failed to set sleep time, mirror is already asleep
         if (!$willSleep && !$force) {
             apcu_delete($this->getCacheKey(self::MIRROR_AWAKE));
+
+            // Maybe we need to hibernate too?
+            $sleptAt = apcu_fetch($this->getCacheKey(self::MIRROR_ASLEEP));
+            $sleeping = $time - $sleptAt;
+            $hibernateTime = val('hibernate', $this->settings, self::HIBERNATE_TIME);
+            if ($sleeping > $hibernateTime) {
+                $this->hibernate();
+            }
+
             return false;
         }
 
@@ -302,6 +314,8 @@ class MirrorClient extends UIClient {
 
         $this->rec("mirror waking up");
 
+        $this->unhibernate();
+
         // Report on and erase sleep time
         $sleptAt = apcu_fetch($this->getCacheKey(self::MIRROR_ASLEEP));
         if ($sleptAt !== false) {
@@ -320,17 +334,85 @@ class MirrorClient extends UIClient {
     /**
      * Turn off actual screen
      *
+     * @param boolean $force force mirror to hibernate even if already hibernating
      */
-    public function hibernate() {
-        $this->sleep();
+    public function hibernate($force = false) {
+
+        $tzName = valr('location.timezone', $this->settings);
+        $tz = new \DateTimeZone($tzName);
+        $date = new \DateTime('now', $tz);
+        $time = $date->getTimestamp();
+
+        // Set hibernate time
+
+        $alreadyHibernating = $this->isHibernating();
+        if ($alreadyHibernating && !$force) {
+            return false;
+        }
+
+        if ($alreadyHibernating) {
+            $willHibernate = apcu_add($this->getCacheKey(self::MIRROR_HIBERNATE), $time);
+        } else {
+            $willHibernate = apcu_store($this->getCacheKey(self::MIRROR_HIBERNATE), $time);
+        }
+
+        $this->rec("mirror going into hibernation");
+
+        exec('/usr/bin/tvservice -o');
+
+        $this->sendMessage('hibernate');
+        return true;
     }
 
     /**
      * Turn on actual screen
      *
      */
-    public function unhibernate() {
-        $this->wake();
+    public function unhibernate($force = false) {
+
+        $tzName = valr('location.timezone', $this->settings);
+        $tz = new \DateTimeZone($tzName);
+        $date = new \DateTime('now', $tz);
+        $time = $date->getTimestamp();
+
+        // Report on and erase sleep time
+
+        if (!$this->isHibernating() && !$force) {
+            return false;
+        }
+
+        $this->rec("mirror waking from hibernation");
+
+        $hibernatedAt = apcu_fetch($this->getCacheKey(self::MIRROR_HIBERNATE));
+        if ($hibernatedAt) {
+            $hibernating = $time - $hibernatedAt;
+            $hibernateDate = new \DateTime('now', $tz);
+            $date->setTimestamp($hibernatedAt);
+            $hibernatedSince = $hibernateDate->format('Y-m-d H:i:s');
+            $this->rec(" hibernating since {$hibernatedSince} ({$hibernating} seconds)");
+            apcu_delete($this->getCacheKey(self::MIRROR_HIBERNATE));
+        }
+
+        exec('/usr/bin/tvservice -p');
+
+        $this->sendMessage('unhibernate');
+        return true;
+    }
+
+    /**
+     * Test if screen is off
+     *
+     */
+    public function isHibernating() {
+
+        exec('/usr/bin/tvservice -s', $out);
+        $out = strtolower(trim(implode('', $out)));
+
+        if (preg_match('`tv is off`', $out)) {
+            return true;
+        }
+        return false;
+
     }
 
 }

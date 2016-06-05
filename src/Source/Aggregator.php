@@ -323,7 +323,7 @@ class Aggregator {
      * @return boolean
      */
     protected function resolveSource(Want $want) {
-        $this->rec("resolve source for ".$want->getUID()." (".$want->getClass().":".$want->getType()."/".$want->getFilter().")");
+        //$this->rec("resolve source for ".$want->getUID()." (".$want->getClass().":".$want->getType()."/".$want->getFilter().")");
         switch ($want->getClass()) {
             case Source::CLASS_DATA:
                 foreach ($this->datasources as $source) {

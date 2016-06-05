@@ -47,6 +47,21 @@
                     "worldnews",
                     "localnews"
                 ]
+            },
+            {
+                "type": "dates",
+                "source": "local",
+                "configuration": {
+                    "filters": {
+                        "special": {
+                            "source": "file",
+                            "file": "data/data-local-special.json"
+                        }
+                    }
+                },
+                "satisfies": [
+                    "special"
+                ]
             }
         ]
     }

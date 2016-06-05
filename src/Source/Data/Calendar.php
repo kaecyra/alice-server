@@ -10,7 +10,7 @@ namespace Alice\Source\Data;
 use Alice\Source\DataSource;
 
 /**
- * ALICE Feature
+ * ALICE DataSource: Calendar
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
@@ -49,7 +49,7 @@ class Calendar extends DataSource {
      *
      * @param array $config
      */
-    public function fetch($config) {
+    public function fetch($filter, $config) {
         return \Alice\API\Calendar::get($config, $this->config);
     }
 

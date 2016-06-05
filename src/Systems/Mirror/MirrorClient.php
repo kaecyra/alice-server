@@ -145,16 +145,12 @@ class MirrorClient extends UIClient {
         }
 
         switch ($sourceType) {
-            case 'weather':
-            case 'news':
+            default:
                 $this->sendMessage('update', [
                     'source' => $sourceType,
                     'filter' => $sourceFilter,
                     'data' => $data
                 ]);
-                break;
-
-            default:
                 break;
         }
     }
@@ -175,8 +171,7 @@ class MirrorClient extends UIClient {
         if ($data == 'ping') {
             return true;
         }
-        
-        $this->rec("received sensor data: {$sourceType}/{$sourceID}");
+
         switch ($sourceType) {
             case 'motion':
                 if ($data == 'still') {

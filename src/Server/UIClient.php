@@ -187,6 +187,8 @@ abstract class UIClient extends SocketClient {
 
         $fieldAliases = [
             'city' => 'location.city',
+            'timezone' => 'location.timezone',
+            'locale' => 'location.locale',
             'units' => 'location.units',
             'latitude' => 'location.latitude',
             'longitude' => 'location.longitude'
@@ -235,7 +237,6 @@ abstract class UIClient extends SocketClient {
             return;
         }
 
-        $this->rec("cycle ".count($this->pending)." pending wants");
         $pendingKeys = array_keys($this->pending);
         foreach ($pendingKeys as $pendingID) {
             $pending = $this->pending[$pendingID];

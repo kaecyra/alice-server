@@ -10,7 +10,7 @@ namespace Alice\Source\Data;
 use Alice\Source\DataSource;
 
 /**
- * ALICE Feature
+ * ALICE DataSource: Weather
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server

@@ -10,12 +10,12 @@ namespace Alice\Source\Sensor;
 use Alice\Source\SensorSource;
 
 /**
- * ALICE SensorSource: Motion
+ * ALICE SensorSource: Messages
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-class Motion extends SensorSource {
+class Messages extends SensorSource {
 
     /**
      * Constructor
@@ -27,7 +27,7 @@ class Motion extends SensorSource {
         parent::__construct($type, $config);
 
         $this->satisfies = [
-            'motion'
+            'messages'
         ];
     }
 

@@ -1,0 +1,51 @@
+{
+  "name": "alice-webui",
+  "version": "1.0.0",
+  "description": "Smart mirror user interface",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaecyra/alice-webui.git"
+  },
+  "scripts": {
+    "build": "grunt",
+    "watch": "grunt watch"
+  },
+  "keywords": [
+    "smart",
+    "smartmirror",
+    "mirror",
+    "alice",
+    "alice-http"
+  ],
+  "author": "Tim Gunter <tim@vanillaforums.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kaecyra/alice-webui/issues"
+  },
+  "homepage": "https://github.com/kaecyra/alice-webui#readme",
+  "dependencies": {
+    "moment": "^2.12.0",
+    "react": "^0.14.8",
+    "react-dom": "^0.14.8"
+  },
+  "devDependencies": {
+    "babel-preset-react": "^6.5.0",
+    "babel-preset-es2015": "^6.6.0",
+    "grunt": "0.4.x",
+    "grunt-autoprefixer": "0.7.x",
+    "grunt-babel": "^6.0.0",
+    "grunt-browserify": "^5.0.0",
+    "grunt-cli": "0.1.x",
+    "grunt-contrib-concat": "0.4.x",
+    "grunt-contrib-imagemin": "1.0.x",
+    "grunt-contrib-jshint": "0.11.x",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-exorcise": "^2.1.1",
+    "grunt-sass": "1.1.x",
+    "grunt-sass-globbing": "^1.5.1",
+    "grunt-wiredep": "2.0.x",
+    "load-grunt-tasks": "3.3.x",
+    "time-grunt": "1.2.x",
+    "wiredep": "3.0.x"
+  }
+}

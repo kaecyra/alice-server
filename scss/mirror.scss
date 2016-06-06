@@ -1,0 +1,315 @@
+.mirror {
+    height: 100vh;
+    
+    // Define grid system
+    
+    .row, 
+    .column {
+        box-sizing: border-box;
+    }
+    
+    .row {
+        display: flex;
+    }
+    
+    .column {
+        display: flex;
+    }
+    
+    // 12 Columns
+    
+    .column + .column {
+        padding-left: 12px;
+    }
+    
+    .column {
+        &.left {
+            justify-content: flex-start;
+        }
+        &.right {
+            justify-content: flex-end;
+        }
+        &.middle {
+            justify-content: center;
+        }
+        &.top {
+            align-items: flex-start;
+        }
+        &.bottom {
+            align-items: flex-end;
+        }
+        &.center {
+            align-items: center;
+        }
+    }
+    
+    .column-1 {
+        flex: 1;
+    }
+
+    .column-2 {
+        flex: 2;
+    }
+
+    .column-3 {
+        flex: 3;
+    }
+
+    .column-4 {
+        flex: 4;
+    }
+
+    .column-5 {
+        flex: 5;
+    }
+
+    .column-6 {
+        flex: 6;
+    }
+
+    .column-7 {
+        flex: 7;
+    }
+
+    .column-8 {
+        flex: 8;
+    }
+
+    .column-9 {
+        flex: 9;
+    }
+
+    .column-10 {
+        flex: 10;
+    }
+
+    .column-11 {
+        flex: 11;
+    }
+
+    .column-12 {
+        flex: 12;
+    }
+    
+}
+
+.mirror-connection {
+    padding: 0px 30px;
+    align-self: center;
+    
+    .connection-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        
+        .loader-container {
+            flex: 1;
+            flex-basis: 100px;
+        }
+    
+        .connection-status {
+            flex: 1;
+            
+            font-size: 80px;
+            text-transform: uppercase;
+        }
+    }
+    
+    .connection-info {
+        color: #e1e1e1;
+    }
+}
+
+.mirror-time {
+    text-align: right;
+    
+    .time-time {
+        font-size: 130px;
+        padding-bottom: 10px;
+    }
+    .time-day,
+    .time-month {
+        
+    }
+}
+
+.special-max {
+    height: 100%;
+}
+
+.mirror-weather {
+    
+    .weather-now {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        
+        .weather-temperature {
+            font-size: 130px;
+            padding-bottom: 10px;
+        }
+        
+        .weather-icon {
+            flex-basis: 200px;
+            width: 150px;
+            height: 125px;
+            background-size: 150px 150px;
+            background-repeat: no-repeat;
+            background-position: left center;
+            
+            margin-left: 30px;
+            
+            &.icon-alert {
+                background-image: url('images/weather/alert.png');
+            }
+            
+            &.icon-clear-day {
+                background-image: url('images/weather/clear-day.png');
+            }
+            
+            &.icon-clear-night {
+                background-image: url('images/weather/clear-night.png');
+            }
+            
+            &.icon-cloud-rain {
+                background-image: url('images/weather/cloud-rain.png');
+            }
+            
+            &.icon-cloud {
+                background-image: url('images/weather/cloud.png');
+            }
+            
+            &.icon-fog {
+                background-image: url('images/weather/fog.png');
+            }
+            
+            &.icon-partly-cloudy-day-1 {
+                background-image: url('images/weather/partly-cloudy-day-1.png');
+            }
+            
+            &.icon-partly-cloudy-day-2 {
+                background-image: url('images/weather/partly-cloudy-day-2.png');
+            }
+            
+            &.icon-partly-cloudy-night-1 {
+                background-image: url('images/weather/partly-cloudy-night-1.png');
+            }
+            
+            &.icon-partly-cloudy-night-2 {
+                background-image: url('images/weather/partly-cloudy-night-2.png');
+            }
+            
+            &.icon-rain-1 {
+                background-image: url('images/weather/rain-1.png');
+            }
+            
+            &.icon-rain-2 {
+                background-image: url('images/weather/rain-2.png');
+            }
+            
+            &.icon-rain-3 {
+                background-image: url('images/weather/rain-3.png');
+            }
+            
+            &.icon-snow-1 {
+                background-image: url('images/weather/snow-1.png');
+            }
+            
+            &.icon-snow-2 {
+                background-image: url('images/weather/snow-2.png');
+            }
+            
+            &.icon-snow-3 {
+                background-image: url('images/weather/snow-3.png');
+            }
+            
+            &.icon-thunderstorm-rain {
+                background-image: url('images/weather/thunderstorm-rain.png');
+            }
+            
+            &.icon-thunderstorm {
+                background-image: url('images/weather/thunderstorm.png');
+            }
+            
+            &.icon-wind {
+                background-image: url('images/weather/wind.png');
+            }
+            
+            &.icon-unknown {
+                background-image: url('images/weather/alert.png');
+            }
+        }
+    }
+    
+    .weather-summary {
+        
+    }
+    
+    .weather-prediction {
+        color: #b1b1b1;
+        font-size: 20px;
+    }
+    
+    .weather-chance {
+        margin: 30px 0px;
+    }
+    
+}
+
+.mirror-news {
+    margin: 50px 0px;
+    
+    .news-story {
+        font-size: 20px;
+        margin: 15px 0px;
+        
+        .news-icon {
+            margin-right: 10px;
+        }
+    }
+}
+
+.mirror-dates {
+    margin: 0px auto;
+    margin-top: 50px;
+    
+    .dates-dates {
+        text-align: center;
+    
+        .date-story {
+            .date-icon {
+                font-size: 60px;
+                color: #b1b1b1;
+                
+                &.date-icon-birthday {
+                    color: #88ee88;
+                }
+                
+                &.date-icon-anniversary {
+                    color: #ff4040;
+                }
+                
+                &.date-icon-cute {
+                    color: #ff4040;
+                }
+                
+                &.date-icon-message {
+                    display: none;
+                }
+            }
+
+            .date-message {
+                margin-top: 15px;
+                font-size: 40px;
+            }
+            
+            .date-name {
+                margin-top: 5px;
+                font-size: 20px;
+                color: #a1a1a1;
+            }
+        }
+    }
+}

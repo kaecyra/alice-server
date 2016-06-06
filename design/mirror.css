@@ -1,0 +1,332 @@
+.mirror {
+  height: 100vh;
+}
+
+.mirror .row,
+.mirror .column {
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.mirror .row {
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.mirror .column {
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.mirror .column + .column {
+  padding-left: 12px;
+}
+
+.mirror .column.left {
+  -ms-flex-pack: start;
+  justify-content: flex-start;
+}
+
+.mirror .column.right {
+  -ms-flex-pack: end;
+  justify-content: flex-end;
+}
+
+.mirror .column.middle {
+  -ms-flex-pack: center;
+  justify-content: center;
+}
+
+.mirror .column.top {
+  -ms-flex-align: start;
+  align-items: flex-start;
+}
+
+.mirror .column.bottom {
+  -ms-flex-align: end;
+  align-items: flex-end;
+}
+
+.mirror .column.center {
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+.mirror .column-1 {
+  -ms-flex: 1;
+  flex: 1;
+}
+
+.mirror .column-2 {
+  -ms-flex: 2;
+  flex: 2;
+}
+
+.mirror .column-3 {
+  -ms-flex: 3;
+  flex: 3;
+}
+
+.mirror .column-4 {
+  -ms-flex: 4;
+  flex: 4;
+}
+
+.mirror .column-5 {
+  -ms-flex: 5;
+  flex: 5;
+}
+
+.mirror .column-6 {
+  -ms-flex: 6;
+  flex: 6;
+}
+
+.mirror .column-7 {
+  -ms-flex: 7;
+  flex: 7;
+}
+
+.mirror .column-8 {
+  -ms-flex: 8;
+  flex: 8;
+}
+
+.mirror .column-9 {
+  -ms-flex: 9;
+  flex: 9;
+}
+
+.mirror .column-10 {
+  -ms-flex: 10;
+  flex: 10;
+}
+
+.mirror .column-11 {
+  -ms-flex: 11;
+  flex: 11;
+}
+
+.mirror .column-12 {
+  -ms-flex: 12;
+  flex: 12;
+}
+
+.mirror-connection {
+  padding: 0px 30px;
+  -ms-flex-item-align: center;
+  align-self: center;
+}
+
+.mirror-connection .connection-header {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -ms-flex-pack: start;
+  justify-content: flex-start;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+.mirror-connection .connection-header .loader-container {
+  -ms-flex: 1;
+  flex: 1;
+  -ms-flex-preferred-size: 100px;
+  flex-basis: 100px;
+}
+
+.mirror-connection .connection-header .connection-status {
+  -ms-flex: 1;
+  flex: 1;
+  font-size: 80px;
+  text-transform: uppercase;
+}
+
+.mirror-connection .connection-info {
+  color: #e1e1e1;
+}
+
+.mirror-time {
+  text-align: right;
+}
+
+.mirror-time .time-time {
+  font-size: 130px;
+  padding-bottom: 10px;
+}
+
+.special-max {
+  height: 100%;
+}
+
+.mirror-weather .weather-now {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -ms-flex-pack: start;
+  justify-content: flex-start;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+.mirror-weather .weather-now .weather-temperature {
+  font-size: 130px;
+  padding-bottom: 10px;
+}
+
+.mirror-weather .weather-now .weather-icon {
+  -ms-flex-preferred-size: 200px;
+  flex-basis: 200px;
+  width: 150px;
+  height: 125px;
+  background-size: 150px 150px;
+  background-repeat: no-repeat;
+  background-position: left center;
+  margin-left: 30px;
+}
+
+.mirror-weather .weather-now .weather-icon.icon-alert {
+  background-image: url("images/weather/alert.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-clear-day {
+  background-image: url("images/weather/clear-day.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-clear-night {
+  background-image: url("images/weather/clear-night.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-cloud-rain {
+  background-image: url("images/weather/cloud-rain.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-cloud {
+  background-image: url("images/weather/cloud.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-fog {
+  background-image: url("images/weather/fog.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-partly-cloudy-day-1 {
+  background-image: url("images/weather/partly-cloudy-day-1.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-partly-cloudy-day-2 {
+  background-image: url("images/weather/partly-cloudy-day-2.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-partly-cloudy-night-1 {
+  background-image: url("images/weather/partly-cloudy-night-1.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-partly-cloudy-night-2 {
+  background-image: url("images/weather/partly-cloudy-night-2.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-rain-1 {
+  background-image: url("images/weather/rain-1.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-rain-2 {
+  background-image: url("images/weather/rain-2.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-rain-3 {
+  background-image: url("images/weather/rain-3.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-snow-1 {
+  background-image: url("images/weather/snow-1.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-snow-2 {
+  background-image: url("images/weather/snow-2.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-snow-3 {
+  background-image: url("images/weather/snow-3.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-thunderstorm-rain {
+  background-image: url("images/weather/thunderstorm-rain.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-thunderstorm {
+  background-image: url("images/weather/thunderstorm.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-wind {
+  background-image: url("images/weather/wind.png");
+}
+
+.mirror-weather .weather-now .weather-icon.icon-unknown {
+  background-image: url("images/weather/alert.png");
+}
+
+.mirror-weather .weather-prediction {
+  color: #b1b1b1;
+  font-size: 20px;
+}
+
+.mirror-weather .weather-chance {
+  margin: 30px 0px;
+}
+
+.mirror-news {
+  margin: 50px 0px;
+}
+
+.mirror-news .news-story {
+  font-size: 20px;
+  margin: 15px 0px;
+}
+
+.mirror-news .news-story .news-icon {
+  margin-right: 10px;
+}
+
+.mirror-dates {
+  margin: 0px auto;
+  margin-top: 50px;
+}
+
+.mirror-dates .dates-dates {
+  text-align: center;
+}
+
+.mirror-dates .dates-dates .date-story .date-icon {
+  font-size: 60px;
+  color: #b1b1b1;
+}
+
+.mirror-dates .dates-dates .date-story .date-icon.date-icon-birthday {
+  color: #88ee88;
+}
+
+.mirror-dates .dates-dates .date-story .date-icon.date-icon-anniversary {
+  color: #ff4040;
+}
+
+.mirror-dates .dates-dates .date-story .date-icon.date-icon-cute {
+  color: #ff4040;
+}
+
+.mirror-dates .dates-dates .date-story .date-icon.date-icon-message {
+  display: none;
+}
+
+.mirror-dates .dates-dates .date-story .date-message {
+  margin-top: 15px;
+  font-size: 40px;
+}
+
+.mirror-dates .dates-dates .date-story .date-name {
+  margin-top: 5px;
+  font-size: 20px;
+  color: #a1a1a1;
+}
+/*# sourceMappingURL=mirror.css.map */

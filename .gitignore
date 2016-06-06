@@ -2,5 +2,6 @@
 /conf/data/dates-local-special.json
 /vendor/
 /log/
+/node_modules/
 server.pid
 monitor.pid

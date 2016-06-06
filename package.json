@@ -1,10 +1,10 @@
 {
-  "name": "alice-webui",
+  "name": "alice-server",
   "version": "1.0.0",
   "description": "Smart mirror user interface",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kaecyra/alice-webui.git"
+    "url": "git+https://github.com/kaecyra/alice-server.git"
   },
   "scripts": {
     "build": "grunt",
@@ -15,15 +15,16 @@
     "smartmirror",
     "mirror",
     "alice",
-    "alice-http"
+    "alice-server"
   ],
   "author": "Tim Gunter <tim@vanillaforums.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kaecyra/alice-webui/issues"
+    "url": "https://github.com/kaecyra/alice-server/issues"
   },
-  "homepage": "https://github.com/kaecyra/alice-webui#readme",
+  "homepage": "https://github.com/kaecyra/alice-server#readme",
   "dependencies": {
+    "babelify": "^7.3.0",
     "moment": "^2.12.0",
     "react": "^0.14.8",
     "react-dom": "^0.14.8"

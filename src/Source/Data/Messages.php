@@ -7,9 +7,12 @@
 
 namespace Alice\Source\Data;
 
+use Alice\Alice;
 use Alice\Source\DataSource;
 
-use Alice\Alice;
+use \ZMQ;
+use \ZMQSocket;
+use \ZMQContext;
 
 /**
  * ALICE DataSource: Messages
@@ -54,12 +57,12 @@ class Messages extends DataSource {
 
         $this->messages = [];
 
-        $context = new \ZMQContext();
+        $context = new ZMQContext();
 
         $zmqConfig = Alice::go()->config()->get('data.zero');
 
         // Receive socket
-        $this->zero = new \ZMQSocket($context, ZMQ::SOCKET_SUB);
+        $this->zero = new ZMQSocket($context, ZMQ::SOCKET_SUB);
         $this->zero->connect("tcp://{$zmqConfig['host']}:{$zmqConfig['port']}");
         $this->zero->setSockOpt(ZMQ::SOCKOPT_SUBSCRIBE, 'sensor-messages:');
     }

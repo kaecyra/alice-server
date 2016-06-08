@@ -129,30 +129,20 @@ class WebUI extends App {
      */
     public function web_message(Request $request, Response $response) {
 
-        $fn = '/tmp/messages.log';
-        $f = fopen($fn, 'w+');
+        // Get and parse message contents
+        $messageData = $request->getBody()->getContents();
+        $messageParts = [];
+        parse_str($messageData, $messageParts);
+
+        // Prepare message for zmq pipe
+        $message = [
+            'to' => val('to', $messageParts),
+            'from' => val('msisdn', $messageParts),
+            'message' => val('text', $messageParts),
+            'date' => val('message-timestamp', $messageParts)
+        ];
 
         try {
-
-            // Get and parse message contents
-            $messageData = $request->getBody()->getContents();
-            $messageParts = [];
-            parse_str($messageData, $messageParts);
-
-            // Log message to file
-            $from = val('msisdn', $messageParts);
-            $date = date('Y-m-d H:i:s');
-            fwrite($f, sprintf("[%s] %s (from: {$from})\n", $date, "inbound message"));
-            fwrite($f, sprintf("[%s] %s\n", $date, print_r($messageParts, true)));
-
-            // Prepare message for zmq pipe
-            $message = [
-                'to' => val('to', $messageParts),
-                'from' => val('msisdn', $messageParts),
-                'message' => val('text', $messageParts),
-                'date' => val('message-timestamp', $messageParts)
-            ];
-
             $zmqConfig = $this->config->get('data.zero');
 
             // Connect to zero socket
@@ -165,7 +155,7 @@ class WebUI extends App {
             $publisher->send($update);
 
         } catch (Exception $ex) {
-            fwrite($f, print_r($ex,true));
+            
         }
 
         // Render

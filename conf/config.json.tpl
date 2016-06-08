@@ -66,6 +66,21 @@
                 "satisfies": [
                     "special"
                 ]
+            },
+            {
+                "type": "messages",
+                "source": "nexmo",
+                "configuration": {
+                    "filters": {
+                        "nexmo": {
+                            "key": "",
+                            "secret": ""
+                        }
+                    }
+                },
+                "satisfies": [
+                    "sms"
+                ]
             }
         ]
     },
@@ -108,6 +123,10 @@
                     {
                         "type": "dates",
                         "filter": "special"
+                    },
+                    {
+                        "type": "messages",
+                        "filter": "sms"
                     }
                 ],
                 "sensors": [

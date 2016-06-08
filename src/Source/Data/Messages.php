@@ -100,9 +100,8 @@ class Messages extends DataSource {
             }
         } while (true);
 
-        if (count($queued)) {
-
-        }
+        $nM = count($queued);
+        $this->rec("gathered {$nM} queued messages");
 
         // Message upkeep
 

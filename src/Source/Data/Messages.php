@@ -57,14 +57,19 @@ class Messages extends DataSource {
 
         $this->messages = [];
 
-        $context = new ZMQContext();
+        try {
+            $this->rec("binding zero socket");
+            $context = new ZMQContext();
 
-        $zmqConfig = Alice::go()->config()->get('data.zero');
+            $zmqConfig = Alice::go()->config()->get('data.zero');
 
-        // Receive socket
-        $this->zero = new ZMQSocket($context, ZMQ::SOCKET_SUB);
-        $this->zero->connect("tcp://{$zmqConfig['host']}:{$zmqConfig['port']}");
-        $this->zero->setSockOpt(ZMQ::SOCKOPT_SUBSCRIBE, 'sensor-messages:');
+            // Receive socket
+            $this->zero = new ZMQSocket($context, ZMQ::SOCKET_SUB);
+            $this->zero->bind("tcp://{$zmqConfig['host']}:{$zmqConfig['port']}");
+            $this->zero->setSockOpt(ZMQ::SOCKOPT_SUBSCRIBE, 'sensor-messages:');
+        } catch (Exception $ex) {
+            $this->rec(print_r($ex, true));
+        }
     }
 
     /**

@@ -123,7 +123,8 @@ abstract class UIClient extends SocketClient {
 
         $this->pending[$want->getUID()] = [
             'want' => $want,
-            'callback' => [$this, 'prepareWant']
+            'prepare' => [$this, 'prepareWant'],
+            'ready' => [$this, 'readyWant']
         ];
         $this->rec(" queued connector: ".$want->getUID());
     }
@@ -176,6 +177,7 @@ abstract class UIClient extends SocketClient {
     }
 
     /**
+     * Prepare DataWant for Aggregator
      *
      * @param Want $want
      */
@@ -221,11 +223,23 @@ abstract class UIClient extends SocketClient {
     }
 
     /**
+     * Prepare SensorWant for Aggregator
      *
      * @param Want $want
      */
     protected function prepareSensorWant(Want $want) {
         return true;
+    }
+
+    /**
+     * Perform custom handling for resolved Wants
+     *
+     * This is called after the want is successfully added to the Aggregator.
+     *
+     * @param Want $want
+     */
+    protected function readyWant(Want $want) {
+
     }
 
     /**
@@ -240,12 +254,29 @@ abstract class UIClient extends SocketClient {
         $pendingKeys = array_keys($this->pending);
         foreach ($pendingKeys as $pendingID) {
             $pending = $this->pending[$pendingID];
-            $added = Alice::go()->aggregator()->resolvePendingWant($pending['want'], $pending['callback']);
+            $added = Alice::go()->aggregator()->resolvePendingWant($pending['want'], $pending['prepare'], $pending['ready']);
 
             if ($added) {
                 unset($this->pending[$pendingID]);
             }
         }
+    }
+
+    /**
+     * Find matching Sensor Want
+     * 
+     * @param type $type
+     * @return Want|boolean
+     */
+    public function findSensorWant($type) {
+        foreach ($this->sensors as $sensor) {
+            if ($sensor->getType() != $type) {
+                continue;
+            }
+
+            return $sensor;
+        }
+        return false;
     }
 
 }

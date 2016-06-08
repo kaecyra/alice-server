@@ -334,9 +334,8 @@ class MirrorClient extends UIClient {
     /**
      * Turn off actual screen
      *
-     * @param boolean $force force mirror to hibernate even if already hibernating
      */
-    public function hibernate($force = false) {
+    public function hibernate() {
 
         $tzName = valr('location.timezone', $this->settings);
         $tz = new \DateTimeZone($tzName);
@@ -345,20 +344,13 @@ class MirrorClient extends UIClient {
 
         // Set hibernate time
 
-        $alreadyHibernating = $this->isHibernating();
-        if ($alreadyHibernating && !$force) {
-            return false;
-        }
-
-        if ($alreadyHibernating) {
-            $willHibernate = apcu_add($this->getCacheKey(self::MIRROR_HIBERNATE), $time);
-        } else {
-            $willHibernate = apcu_store($this->getCacheKey(self::MIRROR_HIBERNATE), $time);
-        }
+        apcu_store($this->getCacheKey(self::MIRROR_HIBERNATE), $time);
 
         $this->rec("mirror going into hibernation");
 
+        // Tell motion sensor to hibernate screen
         exec('/usr/bin/tvservice -o');
+        $this->findSensorWant('motion')->getSource()->tellHibernate();
 
         $this->sendMessage('hibernate');
         return true;
@@ -367,6 +359,7 @@ class MirrorClient extends UIClient {
     /**
      * Turn on actual screen
      *
+     * @param boolean $force
      */
     public function unhibernate($force = false) {
 
@@ -377,13 +370,13 @@ class MirrorClient extends UIClient {
 
         // Report on and erase sleep time
 
-        if (!$this->isHibernating() && !$force) {
+        $hibernatedAt = apcu_fetch($this->getCacheKey(self::MIRROR_HIBERNATE));
+        if (!$hibernatedAt && !$force) {
             return false;
         }
 
         $this->rec("mirror waking from hibernation");
 
-        $hibernatedAt = apcu_fetch($this->getCacheKey(self::MIRROR_HIBERNATE));
         if ($hibernatedAt) {
             $hibernating = $time - $hibernatedAt;
             $hibernateDate = new \DateTime('now', $tz);
@@ -393,26 +386,11 @@ class MirrorClient extends UIClient {
             apcu_delete($this->getCacheKey(self::MIRROR_HIBERNATE));
         }
 
-        exec('/usr/bin/tvservice -p');
+        // Tell motion sensor to unhibernate screen
+        $this->findSensorWant('motion')->getSource()->tellUnhibernate();
 
         $this->sendMessage('unhibernate');
         return true;
-    }
-
-    /**
-     * Test if screen is off
-     *
-     */
-    public function isHibernating() {
-
-        exec('/usr/bin/tvservice -s', $out);
-        $out = strtolower(trim(implode('', $out)));
-
-        if (preg_match('`tv is off`', $out)) {
-            return true;
-        }
-        return false;
-
     }
 
 }

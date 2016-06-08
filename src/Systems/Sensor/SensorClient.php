@@ -9,10 +9,7 @@ namespace Alice\Systems\Sensor;
 
 use Alice\Alice;
 
-use Alice\Common\Event;
-
 use Alice\Source\Source;
-use Alice\Source\Sensor\Motion;
 
 use Alice\Socket\SocketMessage;
 use Alice\Server\SocketClient;
@@ -83,6 +80,7 @@ class SensorClient extends SocketClient {
         // Create source
         $type = val('type', $data);
         $this->source = Alice::go()->aggregator()->loadSource(Source::CLASS_SENSOR, $type, $data);
+        $this->source->attachClient($this);
         Alice::go()->aggregator()->addSource($this->source);
 
         // Let the sensor know that registration was successful
@@ -96,7 +94,6 @@ class SensorClient extends SocketClient {
      */
     public function message_sensor(SocketMessage $message) {
         $sensed = $message->getData();
-        $this->rec("sensor: {$sensed}");
         $this->source->pushData($sensed);
     }
 

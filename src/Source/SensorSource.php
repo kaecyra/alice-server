@@ -9,6 +9,8 @@ namespace Alice\Source;
 
 use Alice\Common\Event;
 
+use Alice\Server\SocketClient;
+
 use Exception;
 
 /**
@@ -18,6 +20,12 @@ use Exception;
  * @package alice-server
  */
 abstract class SensorSource extends Source {
+
+    /**
+     * Optional socket client data provider
+     * @var SocketClient
+     */
+    protected $client;
 
     /**
      * SensorSource constructor
@@ -122,6 +130,24 @@ abstract class SensorSource extends Source {
             $message = print_r($message, true);
         }
         rec(sprintf("[sensorsource: %s] %s", $this->getID(), $message), $level, $options);
+    }
+
+    /**
+     * Attach SocketClient data provider
+     *
+     * @param SocketClient $client
+     */
+    public function attachClient(SocketClient $client) {
+        $this->client = $client;
+    }
+
+    /**
+     * Get SocketClient data provider
+     * 
+     * @return SocketClient
+     */
+    public function getClient() {
+        return $this->client;
     }
 
     /**

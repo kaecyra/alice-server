@@ -52,4 +52,20 @@ class Motion extends SensorSource {
         return sprintf($key, $this->name);
     }
 
+    /**
+     * Tell remote client to hibernate
+     * 
+     */
+    public function tellHibernate() {
+        $this->getClient()->sendMessage('hibernate');
+    }
+
+    /**
+     * Tell remote client to unhibernate
+     *
+     */
+    public function tellUnhibernate() {
+        $this->getClient()->sendMessage('unhibernate');
+    }
+
 }

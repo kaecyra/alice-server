@@ -20,7 +20,7 @@ use \ZMQ;
  */
 class Messages extends DataSource {
 
-    const FREQUENCY = 10;
+    const FREQUENCY = 60;
 
     /**
      *
@@ -75,6 +75,10 @@ class Messages extends DataSource {
             $this->zero->subscribe('sensor-messages:');
             $this->zero->on('message', [$this, 'getMessage']);
 
+            $this->zero->on('error', function ($e) {
+                $this->rec($e);
+            });
+
         } catch (Exception $ex) {
             $this->rec(print_r($ex, true));
         }
@@ -93,7 +97,7 @@ class Messages extends DataSource {
 
     /**
      * Inbound ZMQ message
-     * 
+     *
      * @param string $message
      */
     public function getMessage($message) {
@@ -109,8 +113,8 @@ class Messages extends DataSource {
     public function fetch($filter, $config) {
 
         return [
-            'count' => count($messages),
-            'messages' => $messages
+            'count' => count($this->messages),
+            'messages' => $this->messages
         ];
     }
 

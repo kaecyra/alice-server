@@ -153,7 +153,7 @@ class WebUI extends App {
             $zmqConfig = $this->config->get('data.zero');
 
             // Connect to zero socket
-            $context = new ZMQContext();
+            $context = new \ZMQContext();
             $publisher = $context->getSocket(ZMQ::SOCKET_PUB);
             $publisher->bind("tcp://{$zmqConfig['host']}:{$zmqConfig['port']}");
 

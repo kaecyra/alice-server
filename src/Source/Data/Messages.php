@@ -11,8 +11,6 @@ use Alice\Alice;
 use Alice\Source\DataSource;
 
 use \ZMQ;
-use \ZMQSocket;
-use \ZMQContext;
 
 /**
  * ALICE DataSource: Messages
@@ -65,16 +63,17 @@ class Messages extends DataSource {
 
         try {
             $this->rec("binding zero socket");
-            $this->context = new ZMQContext();
+            $this->context = new \React\ZMQ\Context(Alice::loop());
 
             $zmqConfig = Alice::go()->config()->get('data.zero');
             $zmqDSN = "tcp://{$zmqConfig['host']}:{$zmqConfig['port']}";
             $this->rec(" dsn: {$zmqDSN}");
 
             // Receive socket
-            $this->zero = new ZMQSocket($this->context, ZMQ::SOCKET_SUB);
+            $this->zero = $this->context->getSocket(ZMQ::SOCKET_SUB);
             $this->zero->bind($zmqDSN);
-            $this->zero->setSockOpt(ZMQ::SOCKOPT_SUBSCRIBE, 'sensor-messages:');
+            $this->zero->subscribe('sensor-messages:');
+            $this->zero->on('message', [$this, 'getMessage']);
 
         } catch (Exception $ex) {
             $this->rec(print_r($ex, true));
@@ -93,35 +92,21 @@ class Messages extends DataSource {
     }
 
     /**
+     * Inbound ZMQ message
+     * 
+     * @param string $message
+     */
+    public function getMessage($message) {
+        $this->rec("received message: {$message}");
+    }
+
+    /**
      * Fetch messages
      *
      * @param string $filter
      * @param array $config
      */
     public function fetch($filter, $config) {
-
-        $this->rec("gathering queued messages");
-        $queued = [];
-        do {
-            try {
-                $message = $this->zero->recv(ZMQ::MODE_DONTWAIT);
-                if ($message) {
-                    $this->rec(" {$message}");
-                    $queued[] = $message;
-                } else {
-                    break;
-                }
-            }  catch (ZMQSocketException $e) {
-                break;
-            }
-        } while (true);
-
-        $nM = count($queued);
-        $this->rec("gathered {$nM} queued messages");
-
-        // Message upkeep
-
-        $messages = [];
 
         return [
             'count' => count($messages),

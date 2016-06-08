@@ -22,7 +22,8 @@
         "php": ">=5.5",
         "kaecyra/alice-common": "dev-master",
         "cboden/ratchet": "0.3.*",
-        "slim/slim": "^3.0"
+        "slim/slim": "^3.0",
+        "react/zmq": "0.2.*|0.3.*"
     },
     "autoload": {
         "psr-4": { 

@@ -358,9 +358,8 @@ class MirrorClient extends UIClient {
     /**
      * Turn on actual screen
      *
-     * @param boolean $force
      */
-    public function unhibernate($force = false) {
+    public function unhibernate() {
 
         $tzName = valr('location.timezone', $this->settings);
         $tz = new \DateTimeZone($tzName);
@@ -369,13 +368,9 @@ class MirrorClient extends UIClient {
 
         // Report on and erase sleep time
 
-        $hibernatedAt = apcu_fetch($this->getCacheKey(self::MIRROR_HIBERNATE));
-        if (!$hibernatedAt && !$force) {
-            return false;
-        }
-
         $this->rec("mirror waking from hibernation");
 
+        $hibernatedAt = apcu_fetch($this->getCacheKey(self::MIRROR_HIBERNATE));
         if ($hibernatedAt) {
             $hibernating = $time - $hibernatedAt;
             $hibernateDate = new \DateTime('now', $tz);

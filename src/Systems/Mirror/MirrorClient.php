@@ -23,6 +23,7 @@ class MirrorClient extends UIClient {
     const MIRROR_AWAKE = '%s.mirror-awake';
     const MIRROR_ASLEEP = '%s.mirror-asleep';
     const MIRROR_HIBERNATE = '%s.mirror-hibernating';
+    const MIRROR_DISPLAY_MODE = '%s.mirror-displaymode';
     const MIRROR_LOCKDIM = '%s.mirror-lockdim';
 
     const HIBERNATE_TIME = 120;
@@ -177,10 +178,19 @@ class MirrorClient extends UIClient {
 
         switch ($sourceType) {
             case 'motion':
-                if ($data == 'still') {
+
+                // Read display mode from motion sensor
+                $displayMode = valr('extra.display', $data, null);
+                if (in_array($displayMode, ['on', 'off'])) {
+                    apcu_store($this->getCacheKey(self::MIRROR_DISPLAY_MODE), $displayMode);
+                }
+
+                // Handle actual sensor data
+                $sensorData = val('sensor', $data);
+                if ($sensorData == 'still') {
                     $this->still();
                 }
-                if ($data == 'motion') {
+                if ($sensorData == 'motion') {
                     $this->motion();
                 }
                 break;
@@ -342,11 +352,14 @@ class MirrorClient extends UIClient {
         $date = new \DateTime('now', $tz);
         $time = $date->getTimestamp();
 
-        // Set hibernate time
+        // Only hibernate if we're known awake
 
-        apcu_store($this->getCacheKey(self::MIRROR_HIBERNATE), $time);
+        if (!$this->isAwake()) {
+            return;
+        }
 
         $this->rec("mirror going into hibernation");
+        apcu_store($this->getCacheKey(self::MIRROR_HIBERNATE), $time);
 
         // Tell motion sensor to hibernate screen
         $this->findSensorWant('motion')->getSource()->tellHibernate();
@@ -366,11 +379,16 @@ class MirrorClient extends UIClient {
         $date = new \DateTime('now', $tz);
         $time = $date->getTimestamp();
 
-        // Report on and erase sleep time
+        // Only unhibernate if we're known asleep
+
+        if ($this->isAwake()) {
+            return false;
+        }
+
+        $this->rec("mirror waking from hibernation");
 
         $hibernatedAt = apcu_fetch($this->getCacheKey(self::MIRROR_HIBERNATE));
         if ($hibernatedAt) {
-            $this->rec("mirror waking from hibernation");
             $hibernating = $time - $hibernatedAt;
             $hibernateDate = new \DateTime('now', $tz);
             $date->setTimestamp($hibernatedAt);
@@ -384,6 +402,19 @@ class MirrorClient extends UIClient {
 
         $this->sendMessage('unhibernate');
         return true;
+    }
+
+    /**
+     * Check display mode (awake or not)
+     *
+     * @return boolean
+     */
+    public function isAwake() {
+        $displayMode = apcu_fetch($this->getCacheKey(self::MIRROR_DISPLAY_MODE));
+        if (!in_array($displayMode, ['on', 'off'])) {
+            return false;
+        }
+        return $displayMode == 'on' ? true : false;
     }
 
 }

@@ -159,6 +159,7 @@ class WebUI extends App {
             $context = new ZMQContext();
             $publisher = $context->getSocket(ZMQ::SOCKET_PUB);
             $publisher->connect("tcp://{$zmqConfig['host']}:{$zmqConfig['port']}");
+            usleep(200); // Allow time to connect
 
             $update = sprintf("%s: %s", 'sensor-messages', serialize($message));
             $publisher->send($update);

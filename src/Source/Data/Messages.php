@@ -5,7 +5,7 @@
  * @copyright 2016 Tim Gunter
  */
 
-namespace Alice\Source\Sensor;
+namespace Alice\Source\Data;
 
 use Alice\Source\DataSource;
 

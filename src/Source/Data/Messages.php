@@ -94,6 +94,8 @@ class Messages extends DataSource {
                 if ($message) {
                     $this->rec(" {$message}");
                     $queued[] = $message;
+                } else {
+                    break;
                 }
             }  catch (ZMQSocketException $e) {
                 break;

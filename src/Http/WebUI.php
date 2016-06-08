@@ -132,22 +132,22 @@ class WebUI extends App {
         try {
 
             // Get and parse message contents
-            $message = $request->getBody()->getContents();
-            $parts = [];
-            parse_str($message, $parts);
+            $messageData = $request->getBody()->getContents();
+            $messageParts = [];
+            parse_str($messageData, $messageParts);
 
             // Log message to file
-            $from = val('msisdn', $parts);
+            $from = val('msisdn', $messageParts);
             $date = date('Y-m-d H:i:s');
             fwrite($f, sprintf("[%s] %s (from: {$from})\n", $date, "inbound message"));
-            fwrite($f, sprintf("[%s] %s\n", $date, print_r($parts, true)));
+            fwrite($f, sprintf("[%s] %s\n", $date, print_r($messageParts, true)));
 
             // Prepare message for zmq pipe
             $message = [
-                'to' => val('to', $parts),
-                'from' => val('msisdn', $parts),
-                'message' => val('text', $parts),
-                'date' => val('message-timestamp', $parts)
+                'to' => val('to', $messageParts),
+                'from' => val('msisdn', $messageParts),
+                'message' => val('text', $messageParts),
+                'date' => val('message-timestamp', $messageParts)
             ];
 
             $zmqConfig = $this->config->get('data.zero');
@@ -161,7 +161,7 @@ class WebUI extends App {
             $publisher->send($update);
 
         } catch (Exception $ex) {
-
+            fwrite($f, print_r($ex,true));
         }
 
         // Render

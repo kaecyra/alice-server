@@ -25,6 +25,12 @@ class Messages extends DataSource {
     const FREQUENCY = 10;
 
     /**
+     *
+     * @var ZMQContext
+     */
+    protected $context;
+
+    /**
      * ZeroMQ socket
      * @var ZMQSocket
      */
@@ -59,17 +65,17 @@ class Messages extends DataSource {
 
         try {
             $this->rec("binding zero socket");
-            $context = new ZMQContext();
+            $this->context = new ZMQContext();
 
             $zmqConfig = Alice::go()->config()->get('data.zero');
             $zmqDSN = "tcp://{$zmqConfig['host']}:{$zmqConfig['port']}";
             $this->rec(" dsn: {$zmqDSN}");
 
             // Receive socket
-            $this->zero = new ZMQSocket($context, ZMQ::SOCKET_SUB);
+            $this->zero = new ZMQSocket($this->context, ZMQ::SOCKET_SUB);
             $this->zero->bind($zmqDSN);
             $this->zero->setSockOpt(ZMQ::SOCKOPT_SUBSCRIBE, 'sensor-messages:');
-            
+
         } catch (Exception $ex) {
             $this->rec(print_r($ex, true));
         }

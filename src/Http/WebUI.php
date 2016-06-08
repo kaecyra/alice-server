@@ -49,7 +49,9 @@ class WebUI extends App {
         $this->indexDevices();
 
         $this->get('/mirror/{id}', [$this, 'ui_mirror']);
+
         $this->post('/message', [$this, 'web_message']);
+        $this->post('/message/receipt', [$this, 'web_message_receipt']);
     }
 
     /**
@@ -123,6 +125,59 @@ class WebUI extends App {
      * @return Response
      */
     public function web_message(Request $request, Response $response) {
+
+        $fn = '/tmp/messages.log';
+        $f = fopen($fn, 'w+');
+
+        try {
+
+            // Get and parse message contents
+            $message = $request->getBody()->getContents();
+            $parts = [];
+            parse_str($message, $parts);
+
+            // Log message to file
+            $from = val('msisdn', $parts);
+            $date = date('Y-m-d H:i:s');
+            fwrite($f, sprintf("[%s] %s (from: {$from})\n", $date, "inbound message"));
+            fwrite($f, sprintf("[%s] %s\n", $date, print_r($parts, true)));
+
+            // Prepare message for zmq pipe
+            $message = [
+                'to' => val('to', $parts),
+                'from' => val('msisdn', $parts),
+                'message' => val('text', $parts),
+                'date' => val('message-timestamp', $parts)
+            ];
+
+            $zmqConfig = $this->config->get('data.zero');
+
+            // Connect to zero socket
+            $context = new ZMQContext();
+            $publisher = $context->getSocket(ZMQ::SOCKET_PUB);
+            $publisher->bind("tcp://{$zmqConfig['host']}:{$zmqConfig['port']}");
+
+            $update = sprintf("%s: %s", 'sensor-messages', serialize($message));
+            $publisher->send($update);
+
+        } catch (Exception $ex) {
+
+        }
+
+        // Render
+        $response->getBody()->write("ok");
+
+        return $response;
+    }
+
+    /**
+     * Handle SMS message callbacks
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     */
+    public function web_message_receipt(Request $request, Response $response) {
         // Render
         $response->getBody()->write("ok");
 

@@ -124,6 +124,25 @@ class Alice implements App {
             rec("  added source: ".$dataSource->getID());
         }
 
+        // Add sensor sources to aggregator
+        rec(' adding sensor sources');
+        foreach ($this->config->get('data.sensors') as $source) {
+            $sourceType = val('type', $source);
+            if (!$sourceType) {
+                rec('  skipped source with no type');
+                continue;
+            }
+
+            $sensorSource = Aggregator::loadSource(Source::CLASS_SENSOR, $sourceType, $source);
+            if (!$sensorSource) {
+                rec("  unknown sensor source: {$sourceType}");
+                continue;
+            }
+
+            $this->aggregator->addSource($sensorSource);
+            rec("  added source: ".$sensorSource->getID());
+        }
+
         Event::fire('startup');
 
         rec(' starting listeners');
@@ -143,5 +162,14 @@ class Alice implements App {
      */
     public function aggregator() {
         return $this->aggregator;
+    }
+
+    /**
+     * 
+     *
+     * @return Config
+     */
+    public function config() {
+        return $this->config;
     }
 }

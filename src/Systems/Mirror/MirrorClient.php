@@ -368,10 +368,9 @@ class MirrorClient extends UIClient {
 
         // Report on and erase sleep time
 
-        $this->rec("mirror waking from hibernation");
-
         $hibernatedAt = apcu_fetch($this->getCacheKey(self::MIRROR_HIBERNATE));
         if ($hibernatedAt) {
+            $this->rec("mirror waking from hibernation");
             $hibernating = $time - $hibernatedAt;
             $hibernateDate = new \DateTime('now', $tz);
             $date->setTimestamp($hibernatedAt);

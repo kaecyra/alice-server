@@ -54,9 +54,10 @@ class Motion extends SensorSource {
 
     /**
      * Tell remote client to hibernate
-     * 
+     *
      */
     public function tellHibernate() {
+        $this->rec("asking sensor to hibernate attached display");
         $this->getClient()->sendMessage('hibernate');
     }
 
@@ -65,6 +66,7 @@ class Motion extends SensorSource {
      *
      */
     public function tellUnhibernate() {
+        $this->rec("asking sensor to unhibernate attached display");
         $this->getClient()->sendMessage('unhibernate');
     }
 

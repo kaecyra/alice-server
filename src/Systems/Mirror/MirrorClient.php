@@ -349,7 +349,6 @@ class MirrorClient extends UIClient {
         $this->rec("mirror going into hibernation");
 
         // Tell motion sensor to hibernate screen
-        exec('/usr/bin/tvservice -o');
         $this->findSensorWant('motion')->getSource()->tellHibernate();
 
         $this->sendMessage('hibernate');

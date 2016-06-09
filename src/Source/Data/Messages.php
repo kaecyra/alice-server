@@ -29,10 +29,16 @@ class Messages extends DataSource {
     protected $context;
 
     /**
-     * ZeroMQ socket
-     * @var ZMQSocket
+     * ZeroMQ data socket
+     * @var \ZMQSocket
      */
     protected $zero;
+
+    /**
+     * ZeroMQ sync socket
+     * @var \ZMQSocket
+     */
+    protected $zerosync;
 
     /**
      * List of currently cached messages
@@ -66,14 +72,23 @@ class Messages extends DataSource {
             $this->context = new \React\ZMQ\Context(Alice::loop());
 
             $zmqConfig = Alice::go()->config()->get('data.zero');
-            $zmqDSN = "tcp://{$zmqConfig['host']}:{$zmqConfig['port']}";
-            $this->rec(" dsn: {$zmqDSN}");
 
-            // Receive socket
+            $zmqDataDSN = "tcp://{$zmqConfig['host']}:{$zmqConfig['port']}";
+            $this->rec(" data dsn: {$zmqDataDSN}");
+
+            $zmqSyncDSN = "tcp://{$zmqConfig['host']}:{$zmqConfig['syncport']}";
+            $this->rec(" sync dsn: {$zmqSyncDSN}");
+
+            // Bind receive socket
             $this->zero = $this->context->getSocket(ZMQ::SOCKET_SUB);
-            $this->zero->bind($zmqDSN);
+            $this->zero->bind($zmqDataDSN);
             $this->zero->subscribe('sensor-messages:');
             $this->zero->on('message', [$this, 'getMessage']);
+
+            // Bind sync socket
+            $this->zerosync = $this->context->getSocket(ZMQ::SOCKET_REP);
+            $this->zerosync->bind($zmqSyncDSN);
+            $this->zerosync->on('message', [$this, 'syncMessage']);
 
             $this->zero->on('error', function ($e) {
                 $this->rec($e);
@@ -102,6 +117,16 @@ class Messages extends DataSource {
      */
     public function getMessage($message) {
         $this->rec("received message: {$message}");
+    }
+
+    /**
+     * Inbound ZMQ sync message
+     *
+     * @param string $message
+     */
+    public function syncMessage($message) {
+        $this->rec("received sync: {$message}");
+        $this->zerosync->send("synced");
     }
 
     /**

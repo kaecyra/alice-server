@@ -6,9 +6,9 @@
 
 var React = require('react');
 
-var Dates = React.createClass({
+var Messages = React.createClass({
     
-    is: function() { return 'dates'; },
+    is: function() { return 'messages'; },
     
     /**
      * Get initial state
@@ -16,7 +16,7 @@ var Dates = React.createClass({
     getInitialState: function() {
         return {
             count: 0,
-            dates: []
+            messages: []
         };
     },
     
@@ -27,32 +27,21 @@ var Dates = React.createClass({
     render: function(){
         if (!this.state.count) {
             return (
-                <div className="mirror-dates"></div>
+                <div className="mirror-messages"></div>
             );
         }
         
         return (
-            <div className="mirror-dates">
-                <div className="dates-dates">
-                {this.state.dates.map(function(row, i){
-                    var icon = 'calendar';
-                    switch (row.event) {
-                        case 'birthday':
-                            icon = 'birthday-cake';
-                            break;
-                            
-                        case 'cute':
-                        case 'anniversary':
-                            icon = 'heart';
-                            break;
-                    }
-                    var iconClass = "date-icon fa fa-"+icon+" date-icon-"+row.event;
+            <div className="mirror-messages">
+                <div className="messages-messages">
+                {this.state.messages.map(function(row, i){
+                    var icon = 'comment-o';
+                    var iconClass = "message-icon fa fa-"+icon;
                     
                     return (
-                        <div className="date-story" key={row.id}>
-                            <i className={iconClass}></i>
-                            <div className="date-message">{row.fmessage}</div>
-                            <div className="date-name">{row.name}</div>
+                        <div className="message-story" key={row.id}>
+                            <div className="message-message">{row.message}</div>
+                            <div className="message-from">{row.from}</div>
                         </div>
                     );
                 })}
@@ -62,4 +51,4 @@ var Dates = React.createClass({
     }
 });
 
-module.exports = Dates;
+module.exports = Messages;

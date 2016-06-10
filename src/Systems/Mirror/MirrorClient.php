@@ -94,7 +94,9 @@ class MirrorClient extends UIClient {
         $this->queueSensorConnectors($sensors);
 
         // Let the mirror know that registration was successful
-        $this->sendMessage('registered');
+        $this->sendMessage('registered', [
+            'version' => APP_VERSION
+        ]);
     }
 
     /**

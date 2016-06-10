@@ -184,6 +184,12 @@ function SocketClient(server) {
      * @type {Events}
      */
     this.events = null;
+
+    /**
+     * Server version
+     * @type {String}
+     */
+    this.registeredVersion = null;
 };
 
 /**
@@ -384,6 +390,16 @@ SocketClient.prototype.message_registered = function (data) {
     this.log("server acknowledged registration");
     this.setState('registered');
     this.setState('ready');
+
+    // Check if a refresh is required
+    var serverVersion = data.version;
+    if (this.registeredVersion !== null) {
+        if (serverVersion !== this.registeredVersion) {
+            this.log(" server version changed (" + this.registeredVersion + " -> " + serverVersion + ", reloading UI");
+            window.location.reload();
+        }
+    }
+    this.registeredVersion = serverVersion;
 };
 
 /**

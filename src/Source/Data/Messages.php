@@ -137,7 +137,7 @@ class Messages extends DataSource {
         $this->contacts = [];
 
         $fileName = 'messages-contacts.json';
-        $filePath = paths(APP_ROOT, 'conf', $fileName);
+        $filePath = paths(APP_ROOT, 'conf/data', $fileName);
         $fileData = file_get_contents($filePath);
         $data = json_decode($fileData, true);
 

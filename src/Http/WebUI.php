@@ -163,9 +163,6 @@ class WebUI extends App {
             $update = json_encode($message);
             $dataSocket->sendMulti(['sms-message', $update]);
 
-            $dataSocket->close();
-            $syncSocket->close();
-
         } catch (Exception $ex) {
 
         }

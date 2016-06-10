@@ -65,6 +65,12 @@ class Messages extends DataSource {
     protected $storageTTL;
 
     /**
+     * Allowed contacts
+     * @var array
+     */
+    protected $contacts;
+
+    /**
      * Constructor
      *
      * @param string $type
@@ -88,6 +94,9 @@ class Messages extends DataSource {
 
         $this->storageTTL = valr('configuration.ttl', $config, self::DEFAULT_STORAGE_TTL) * 86400;
 
+        // Load contacts
+        $this->loadContacts();
+
         try {
             $this->rec("binding zero socket");
             $this->context = new \React\ZMQ\Context(Alice::loop());
@@ -104,7 +113,7 @@ class Messages extends DataSource {
             $this->zero = $this->context->getSocket(ZMQ::SOCKET_SUB);
             $this->zero->bind($zmqDataDSN);
             $this->zero->subscribe('sms-message');
-            $this->zero->on('message', [$this, 'getMessage']);
+            $this->zero->on('messages', [$this, 'getMessage']);
 
             // Bind sync socket
             $this->zerosync = $this->context->getSocket(ZMQ::SOCKET_REP);
@@ -118,6 +127,25 @@ class Messages extends DataSource {
         } catch (Exception $ex) {
             $this->rec(print_r($ex, true));
         }
+    }
+
+    /**
+     *
+     */
+    public function loadContacts() {
+
+        $this->contacts = [];
+
+        $fileName = 'messages-contacts.json';
+        $filePath = paths(APP_ROOT, 'conf', $fileName);
+        $fileData = file_get_contents($filePath);
+        $data = json_decode($fileData, true);
+
+        foreach ($data as $contact) {
+            $contactID = $contact['number'];
+            $this->contacts[$contactID] = $contact;
+        }
+
     }
 
     /**
@@ -166,12 +194,14 @@ class Messages extends DataSource {
         if (is_null($topic)) {
             $topic = 'unknown';
         }
-        $this->rec("received message [{$topic}]:");
-        $this->rec($message);
 
         switch ($topic) {
             case 'sms-message':
                 $this->receiveSMS($message);
+                break;
+            default:
+                $this->rec("received message [{$topic}]:");
+                $this->rec($message);
                 break;
         }
     }
@@ -199,10 +229,18 @@ class Messages extends DataSource {
      */
     public function receiveSMS($message) {
         $from = val('from', $message);
-        $to = val('to', $message);
         $text = val('message', $message);
 
-        $this->rec(" sms [from {$from}, to {$to}]: {$text}");
+        // Lookup contact
+        $contactID = substr($from, -10);
+        if (!array_key_exists($contactID, $this->contacts)) {
+            $this->rec("discarded sms from unknown contact [from {$from}]: {$text}");
+            return;
+        }
+        $contact = $this->contacts[$contactID];
+        $fromName = $contact['name'];
+
+        $this->rec("received sms [from {$fromName} ({$from})]: {$text}");
 
         $messageID = $this->getMessageID($message);
         $message['id'] = $messageID;
@@ -241,6 +279,7 @@ class Messages extends DataSource {
         foreach ($messageIDs as $messageID) {
             $message = $this->messages[$messageID];
             if (time() > $message['keep']) {
+                $this->rec("culling expired sms: {$messageID}");
                 unset($this->messages[$messageID]);
             }
         }

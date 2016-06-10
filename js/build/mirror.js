@@ -764,6 +764,9 @@ var MirrorUI = React.createClass({
                         { className: 'column column-8' },
                         React.createElement(News, { ref: function ref(_ref3) {
                                 _this.registerComponent('news', _ref3);
+                            } }),
+                        React.createElement(Messages, { ref: function ref(_ref4) {
+                                _this.registerComponent('messages', _ref4);
                             } })
                     )
                 ),
@@ -773,8 +776,8 @@ var MirrorUI = React.createClass({
                     React.createElement(
                         'div',
                         { className: 'column column-12' },
-                        React.createElement(Dates, { ref: function ref(_ref4) {
-                                _this.registerComponent('dates', _ref4);
+                        React.createElement(Dates, { ref: function ref(_ref5) {
+                                _this.registerComponent('dates', _ref5);
                             } })
                     )
                 )
@@ -791,8 +794,8 @@ var MirrorUI = React.createClass({
                     React.createElement(
                         'div',
                         { className: 'column column-6 middle center' },
-                        React.createElement(Connection, { ref: function ref(_ref5) {
-                                _this.registerComponent('connection', _ref5);
+                        React.createElement(Connection, { ref: function ref(_ref6) {
+                                _this.registerComponent('connection', _ref6);
                             } })
                     ),
                     React.createElement('div', { className: 'column column-3' })

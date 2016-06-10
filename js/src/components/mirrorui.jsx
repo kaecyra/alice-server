@@ -13,6 +13,7 @@ var Time = require('./time.jsx');
 var Weather = require('./weather.jsx');
 var News = require('./news.jsx');
 var Dates = require('./dates.jsx');
+var Messages = require('./messages.jsx');
 
 /**
  * MirrorUI component

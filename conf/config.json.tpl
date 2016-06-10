@@ -71,6 +71,7 @@
                 "type": "messages",
                 "source": "nexmo",
                 "configuration": {
+                    "ttl": 2,
                     "filters": {
                         "nexmo": {
                             "key": "",
@@ -126,7 +127,10 @@
                     },
                     {
                         "type": "messages",
-                        "filter": "sms"
+                        "filter": "sms",
+                        "config": {
+                            "ttl": 3600
+                        }
                     }
                 ],
                 "sensors": [

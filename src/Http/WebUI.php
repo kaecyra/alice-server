@@ -147,25 +147,24 @@ class WebUI extends App {
 
             $context = new ZMQContext();
 
-            $zmqDataDSN = "tcp://{$zmqConfig['host']}:{$zmqConfig['port']}";
-            $zmqSyncDSN = "tcp://{$zmqConfig['host']}:{$zmqConfig['syncport']}";
-
             // Publisher socket
-            $publisher = $context->getSocket(ZMQ::SOCKET_PUB);
-            $publisher->connect($zmqDataDSN);
+            $zmqDataDSN = "tcp://{$zmqConfig['host']}:{$zmqConfig['port']}";
+            $dataSocket = $context->getSocket(ZMQ::SOCKET_PUB);
+            $dataSocket->connect($zmqDataDSN);
 
             // Synchronize socket
-            $sync = $context->getSocket(ZMQ::SOCKET_REQ);
-            $sync->connect($zmqSyncDSN);
-            $sync->send('sync');
-            $synced = $sync->recv();
+            $zmqSyncDSN = "tcp://{$zmqConfig['host']}:{$zmqConfig['syncport']}";
+            $syncSocket = $context->getSocket(ZMQ::SOCKET_REQ);
+            $syncSocket->connect($zmqSyncDSN);
+            $syncSocket->send('sync');
+            $syncSocket->recv();
 
             // Send message
-            $update = sprintf("%s: %s", 'sensor-messages', serialize($message));
-            $publisher->send($update);
+            $update = json_encode($message);
+            $dataSocket->sendMulti(['sms-message', $update]);
 
-            $publisher->close();
-            $sync->close();
+            $dataSocket->close();
+            $syncSocket->close();
 
         } catch (Exception $ex) {
 

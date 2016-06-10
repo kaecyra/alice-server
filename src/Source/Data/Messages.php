@@ -23,8 +23,20 @@ class Messages extends DataSource {
     const FREQUENCY = 60;
 
     /**
-     *
-     * @var ZMQContext
+     * Storage TTL (days)
+     * @var integer
+     */
+    const DEFAULT_STORAGE_TTL = 2;
+
+    /**
+     * Default display ttl (seconds)
+     * @var integer
+     */
+    const DEFAULT_DISPLAY_TTL = 3600;
+
+    /**
+     * ZeroMQ context
+     * @var \ZMQContext
      */
     protected $context;
 
@@ -47,6 +59,12 @@ class Messages extends DataSource {
     protected $messages;
 
     /**
+     * Actual storage ttl
+     * @var integer
+     */
+    protected $storageTTL;
+
+    /**
      * Constructor
      *
      * @param string $type
@@ -62,10 +80,13 @@ class Messages extends DataSource {
         ];
 
         $this->requirements = [
-            'base' => []
+            'base' => [
+            ]
         ];
 
         $this->messages = [];
+
+        $this->storageTTL = valr('configuration.ttl', $config, self::DEFAULT_STORAGE_TTL) * 86400;
 
         try {
             $this->rec("binding zero socket");
@@ -82,7 +103,7 @@ class Messages extends DataSource {
             // Bind receive socket
             $this->zero = $this->context->getSocket(ZMQ::SOCKET_SUB);
             $this->zero->bind($zmqDataDSN);
-            $this->zero->subscribe('sensor-messages:');
+            $this->zero->subscribe('sms-message');
             $this->zero->on('message', [$this, 'getMessage']);
 
             // Bind sync socket
@@ -111,15 +132,6 @@ class Messages extends DataSource {
     }
 
     /**
-     * Inbound ZMQ message
-     *
-     * @param string $message
-     */
-    public function getMessage($message) {
-        $this->rec("received message: {$message}");
-    }
-
-    /**
      * Inbound ZMQ sync message
      *
      * @param string $message
@@ -130,17 +142,131 @@ class Messages extends DataSource {
     }
 
     /**
+     * Inbound ZMQ message
+     *
+     * @param string|array $message
+     */
+    public function getMessage($message, $topic = null) {
+        if (is_array($message)) {
+            $topic = $message[0];
+            $message = $message[1];
+        }
+
+        if (is_string($message)) {
+            $decoded = json_decode($message, true);
+            if (!is_array($decoded)) {
+                $message = [
+                    'message' => $message
+                ];
+            } else {
+                $message = $decoded;
+            }
+        }
+
+        if (is_null($topic)) {
+            $topic = 'unknown';
+        }
+        $this->rec("received message [{$topic}]:");
+        $this->rec($message);
+
+        switch ($topic) {
+            case 'sms-message':
+                $this->receiveSMS($message);
+                break;
+        }
+    }
+
+    /**
+     * Get unique message ID for message
+     *
+     * @param array $message
+     * @return string
+     */
+    public function getMessageID($message) {
+        $from = val('from', $message);
+        $to = val('to', $message);
+        $date = val('date', $message);
+        $messageHash = sha1($message['message']);
+
+        $combo = implode(' - ', [$from, $to, $date, $messageHash]);
+        return sha1($combo);
+    }
+
+    /**
+     * Receive inbound SMS
+     *
+     * @param array $message
+     */
+    public function receiveSMS($message) {
+        $from = val('from', $message);
+        $to = val('to', $message);
+        $text = val('message', $message);
+
+        $this->rec(" sms [from {$from}, to {$to}]: {$text}");
+
+        $messageID = $this->getMessageID($message);
+        $message['id'] = $messageID;
+
+        if (!array_key_exists($messageID, $this->messages)) {
+            $keepUntil = time() + $this->storageTTL;
+            $message['keep'] = $keepUntil;
+            $message['received'] = time();
+            $this->messages[$messageID] = $message;
+        }
+    }
+
+    /**
      * Fetch messages
      *
      * @param string $filter
      * @param array $config
      */
     public function fetch($filter, $config) {
+        $this->cull();
+        $messages = $this->filter(val('ttl', $config, self::DEFAULT_DISPLAY_TTL));
 
         return [
-            'count' => count($this->messages),
-            'messages' => $this->messages
+            'count' => count($messages),
+            'messages' => $messages
         ];
+    }
+
+    /**
+     * Cull expired messages
+     *
+     * Delete messages from queue when they are older than the storage TTL.
+     */
+    public function cull() {
+        $messageIDs = array_keys($this->messages);
+        foreach ($messageIDs as $messageID) {
+            $message = $this->messages[$messageID];
+            if (time() > $message['keep']) {
+                unset($this->messages[$messageID]);
+            }
+        }
+    }
+
+    /**
+     * Get messages younger than TTL
+     *
+     * @param integer $ttl
+     */
+    public function filter($ttl) {
+        $messages = [];
+
+        // Watch array in reverse order for efficiency
+        $set = array_reverse($this->messages);
+        foreach ($set as $message) {
+            if ((time() - $message['received']) < $ttl) {
+                $messages[] = $message;
+                continue;
+            }
+
+            // Break at first non matching message
+            break;
+        }
+
+        return $messages;
     }
 
     /**

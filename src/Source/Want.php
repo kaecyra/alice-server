@@ -230,7 +230,7 @@ class Want {
         if (!$this->isReady()) {
             return false;
         }
-        
+
         switch ($this->class) {
             case Source::CLASS_DATA:
                 return (time() - $this->lastUpdated) > $this->source->getFrequency();
@@ -289,6 +289,8 @@ class Want {
         $this->rec('pulling update');
         $this->lastUpdated = time();
         $data = $this->source->fetch($this->filter, $this->config);
+        $wake = $this->source->getWake();
+        $this->setCache($wake, 'wake');
         if ($data) {
             $this->setCache($data, 'data');
             return $data;
@@ -302,7 +304,7 @@ class Want {
      * @param array $update
      */
     public function pushUpdate($update) {
-        Event::fire($this->getEventID(), [$this->type, $this->filter, $update]);
+        Event::fire($this->getEventID(), [$this->type, $this->filter, $update, $this->getCache('wake')]);
     }
 
     /**

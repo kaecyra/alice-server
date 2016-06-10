@@ -313,3 +313,22 @@
         }
     }
 }
+
+.mirror-messages {
+    .messages-messages {
+        margin: 50px 0px;
+
+        .message-story {
+            font-size: 20px;
+            margin: 15px 0px;
+
+            .message-message {
+                color: white;
+                font-size: 32px;
+            }
+            .message-from {
+                color: #b1b1b1;
+            }
+        }
+    }
+}

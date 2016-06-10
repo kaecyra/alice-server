@@ -130,7 +130,7 @@ abstract class Source {
 
     /**
      * Source destructor
-     * 
+     *
      */
     public function __destruct() {
         $this->rec("shutting down");

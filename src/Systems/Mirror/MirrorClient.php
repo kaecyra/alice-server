@@ -142,8 +142,9 @@ class MirrorClient extends UIClient {
      * @param string $sourceType
      * @param string $sourceFilter
      * @param mixed $data
+     * @param boolean $wake
      */
-    public function update($sourceType, $sourceFilter, $data) {
+    public function update($sourceType, $sourceFilter, $data, $wake = false) {
 
         // Handle 'still wanted' pings
         if ($data == 'ping') {
@@ -158,6 +159,11 @@ class MirrorClient extends UIClient {
                     'data' => $data
                 ]);
                 break;
+        }
+
+        // Allow data updates to wake the mirror
+        if ($wake) {
+            $this->wake();
         }
     }
 

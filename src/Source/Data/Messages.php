@@ -250,6 +250,8 @@ class Messages extends DataSource {
             $message['keep'] = $keepUntil;
             $message['received'] = time();
             $this->messages[$messageID] = $message;
+
+            $this->setWake(true);
         }
     }
 

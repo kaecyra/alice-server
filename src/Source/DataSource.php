@@ -30,6 +30,12 @@ abstract class DataSource extends Source {
     protected $frequency;
 
     /**
+     * Wake on next fetch
+     * @var boolean
+     */
+    protected $wakeNext = false;
+
+    /**
      * DataSource constructor
      *
      * No direct DataSource instantiation is permitted, must be load()ed.
@@ -79,6 +85,29 @@ abstract class DataSource extends Source {
             $requirements = array_merge($requirements, $this->requirements[$filter]);
         }
         return array_unique($requirements);
+    }
+
+    /**
+     * Set wake on next fetch
+     *
+     * @param boolean $wake
+     */
+    public function setWake($wake) {
+        $this->wakeNext = $wake;
+    }
+
+    /**
+     * Get wake on next fetch
+     *
+     * @param boolean $clear set wakeNext to false when we query
+     * @return boolean
+     */
+    public function getWake($clear = true) {
+        $wake = $this->wakeNext;
+        if ($clear) {
+            $this->wakeNext = false;
+        }
+        return $wake;
     }
 
     /**

@@ -329,4 +329,22 @@
   font-size: 20px;
   color: #a1a1a1;
 }
+
+.mirror-messages .messages-messages {
+  margin: 50px 0px;
+}
+
+.mirror-messages .messages-messages .message-story {
+  font-size: 20px;
+  margin: 15px 0px;
+}
+
+.mirror-messages .messages-messages .message-story .message-message {
+  color: white;
+  font-size: 32px;
+}
+
+.mirror-messages .messages-messages .message-story .message-from {
+  color: #b1b1b1;
+}
 /*# sourceMappingURL=mirror.css.map */

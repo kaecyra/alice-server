@@ -117,6 +117,13 @@ var MirrorUI = React.createClass({
 
                         <div className="column column-8">
                             <News ref={(ref) => { this.registerComponent('news', ref); }} />
+                        </div>
+
+                    </div>
+
+                    <div className="row">
+
+                        <div className="column column-8">
                             <Messages ref={(ref) => { this.registerComponent('messages', ref); }} />
                         </div>
 

@@ -163,7 +163,7 @@ class MirrorClient extends UIClient {
 
         // Allow data updates to wake the mirror
         if ($wake) {
-            $this->wake();
+            $this->motion();
         }
     }
 

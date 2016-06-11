@@ -13,7 +13,7 @@ use Alice\Source\DataSource;
 use \ZMQ;
 
 use HeyUpdate\Emoji\Emoji;
-use HeyUpdate\Emoji\EmojiIndex;
+use HeyUpdate\Emoji\Index\CompiledIndex;
 
 use \DateTime;
 
@@ -76,6 +76,12 @@ class Messages extends DataSource {
     protected $contacts;
 
     /**
+     *
+     * @var Emoji
+     */
+    protected $emoji;
+
+    /**
      * Constructor
      *
      * @param string $type
@@ -103,6 +109,8 @@ class Messages extends DataSource {
 
         // Load contacts
         $this->loadContacts();
+
+        $this->emoji = new Emoji(new CompiledIndex(), '//twemoji.maxcdn.com/36x36/%s.png');
 
         try {
             $this->rec("binding zero socket");
@@ -257,10 +265,7 @@ class Messages extends DataSource {
             $keepUntil = time() + $this->storageTTL;
             $message['keep'] = $keepUntil;
             $message['received'] = time();
-
-            $emoji = new Emoji(new EmojiIndex(), '//twemoji.maxcdn.com/36x36/%s.png');
-            $message['formatted'] = $emoji->replaceEmojiWithImages($message['message']);
-
+            $message['formatted'] = $this->emoji->replaceEmojiWithImages($message['message']);
 
             $this->messages[$messageID] = $message;
 

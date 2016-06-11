@@ -110,7 +110,7 @@ class Messages extends DataSource {
         // Load contacts
         $this->loadContacts();
 
-        $this->emoji = new Emoji(new CompiledIndex(), '//twemoji.maxcdn.com/36x36/%s.png');
+        $this->emoji = new Emoji(new CompiledIndex());
 
         try {
             $this->rec("binding zero socket");

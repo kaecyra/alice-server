@@ -321,6 +321,11 @@
         .message-story {
             font-size: 18px;
             margin: 20px 0px;
+            
+            .emoji {
+                height: 32px;
+                margin: 0px 1px;
+            }
 
             .message-byline {
                 text-transform: uppercase;

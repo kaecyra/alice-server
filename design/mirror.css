@@ -339,6 +339,11 @@
   margin: 20px 0px;
 }
 
+.mirror-messages .messages-messages .message-story .emoji {
+  height: 32px;
+  margin: 0px 1px;
+}
+
 .mirror-messages .messages-messages .message-story .message-byline {
   text-transform: uppercase;
   color: #b1b1b1;

@@ -20,7 +20,7 @@ use \ZMQ;
  */
 class Messages extends DataSource {
 
-    const FREQUENCY = 60;
+    const FREQUENCY = 20;
 
     /**
      * Storage TTL (days)

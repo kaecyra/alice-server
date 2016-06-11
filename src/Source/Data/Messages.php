@@ -269,9 +269,13 @@ class Messages extends DataSource {
      * @param array $config
      */
     public function fetch($filter, $config) {
+        // Delete expired messages from global cache
         $this->cull();
+
+        // Retrieve ttl-filtered list of messages
         $messages = $this->filter(val('ttl', $config, self::DEFAULT_DISPLAY_TTL));
 
+        // Slice messages down to required limit number
         $limit = val('limit', $config);
         $messages = array_slice($messages, 0, $limit);
 
@@ -280,6 +284,7 @@ class Messages extends DataSource {
         $tz = new \DateTimeZone($config['timezone']);
 
         foreach ($messages as &$message) {
+            $this->rec($message);
             $this->rec(" date = {$message['date']}");
             $date = new DateTime($message['date'], $tz);
             $this->rec(" converted: ".$date->format('l, g:ia'));

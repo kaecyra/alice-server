@@ -134,6 +134,12 @@ class WebUI extends App {
         $messageParts = [];
         parse_str($messageData, $messageParts);
 
+        // Webhook test
+        if (!is_array($messageParts) || !count($messageParts)) {
+            $response->getBody()->write("webhook ok");
+            return $response;
+        }
+
         // Prepare message for zmq pipe
         $message = [
             'to' => val('to', $messageParts),

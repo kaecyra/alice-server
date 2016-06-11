@@ -109,7 +109,7 @@ class WebUI extends App {
 
         // Prepare view
         $viewData = formatString($viewData, [
-            't'         => time(),
+            'timestamp' => time(),
             'device'    => json_encode($device, JSON_PRETTY_PRINT),
             'server'    => json_encode($serverConfig, JSON_PRETTY_PRINT)
         ]);

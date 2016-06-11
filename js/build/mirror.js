@@ -699,13 +699,23 @@ var Messages = React.createClass({
                         { className: 'message-story', key: row.id },
                         React.createElement(
                             'div',
+                            { className: 'message-byline' },
+                            'message from ',
+                            React.createElement(
+                                'span',
+                                { className: 'message-from' },
+                                row.contact.nick
+                            )
+                        ),
+                        React.createElement(
+                            'div',
                             { className: 'message-message' },
                             row.message
                         ),
                         React.createElement(
                             'div',
-                            { className: 'message-from' },
-                            row.contact.nick
+                            { className: 'message-time' },
+                            row.time
                         )
                     );
                 })

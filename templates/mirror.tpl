@@ -2,10 +2,10 @@
 <html lang="en-us">
 <head>
     <script src="/js/jquery.min.js"></script>
-    <script src="/js/build/mirror.js?{t}"></script>
+    <script src="/js/build/mirror.js?{timestamp}"></script>
     
-    <link href="/design/alice.css?{t}" rel="stylesheet">
-    <link href="/design/mirror.css?{t}" rel="stylesheet">
+    <link href="/design/alice.css?{timestamp}" rel="stylesheet">
+    <link href="/design/mirror.css?{timestamp}" rel="stylesheet">
     
     <link href="/design/fonts/fontawesome/font-awesome.css" rel="stylesheet">
 </head>

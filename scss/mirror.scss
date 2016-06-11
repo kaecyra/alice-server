@@ -322,12 +322,18 @@
             font-size: 20px;
             margin: 15px 0px;
 
+            .message-byline {
+                text-transform: uppercase;
+                color: #b1b1b1;
+            }
+            .message-from {
+                color: white;
+            }
             .message-message {
                 color: white;
                 font-size: 32px;
             }
-            .message-from {
-                color: #b1b1b1;
+            .message-time {
             }
         }
     }

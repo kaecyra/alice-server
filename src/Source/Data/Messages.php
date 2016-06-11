@@ -12,6 +12,8 @@ use Alice\Source\DataSource;
 
 use \ZMQ;
 
+use \DateTime;
+
 /**
  * ALICE DataSource: Messages
  *
@@ -87,6 +89,8 @@ class Messages extends DataSource {
 
         $this->requirements = [
             'base' => [
+                'timezone',
+                'limit'
             ]
         ];
 
@@ -266,6 +270,16 @@ class Messages extends DataSource {
         $this->cull();
         $messages = $this->filter(val('ttl', $config, self::DEFAULT_DISPLAY_TTL));
 
+        $limit = val('limit', $config);
+        $messages = array_slice($messages, 0, $limit);
+
+        $tz = new \DateTimeZone($config['timezone']);
+
+        foreach ($messages as &$message) {
+            $date = new DateTime($message['date'], $tz);
+            $message['time'] = $this->getTimeAgo($date);
+        }
+
         return [
             'count' => count($messages),
             'messages' => $messages
@@ -319,6 +333,34 @@ class Messages extends DataSource {
      */
     protected function getCacheKey($key) {
         return sprintf($key, $this->name);
+    }
+
+    /**
+     * Get fuzzy time ago
+     *
+     * @param DateTime $date
+     * @return string
+     */
+    protected function getTimeAgo($date) {
+        $now = new DateTime('now', $date->getTimezone());
+        $now = $now->getTimestamp();
+
+        $ago = $now - $date->getTimestamp();
+        if ($ago < 60) {
+            $when = round($ago);
+            $s = ($when == 1) ? "second" : "seconds";
+            return "$when $s ago";
+        } elseif ($ago < 3600) {
+            $when = round($ago / 60);
+            $m = ($when == 1) ? "minute" : "minutes";
+            return "$when $m ago";
+        } elseif ($ago >= 3600 && $ago < 86400) {
+            $when = round($ago / 60 / 60);
+            $h = ($when == 1) ? "hour" : "hours";
+            return "$when $h ago";
+        } else {
+            return strtolower($date->format('l, g:ia'));
+        }
     }
 
 }

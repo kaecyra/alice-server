@@ -129,7 +129,8 @@
                         "type": "messages",
                         "filter": "sms",
                         "config": {
-                            "ttl": 3600
+                            "ttl": 3600,
+                            "limit": 5
                         }
                     }
                 ],

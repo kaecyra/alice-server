@@ -339,12 +339,17 @@
   margin: 15px 0px;
 }
 
-.mirror-messages .messages-messages .message-story .message-message {
-  color: white;
-  font-size: 32px;
+.mirror-messages .messages-messages .message-story .message-byline {
+  text-transform: uppercase;
+  color: #b1b1b1;
 }
 
 .mirror-messages .messages-messages .message-story .message-from {
-  color: #b1b1b1;
+  color: white;
+}
+
+.mirror-messages .messages-messages .message-story .message-message {
+  color: white;
+  font-size: 32px;
 }
 /*# sourceMappingURL=mirror.css.map */

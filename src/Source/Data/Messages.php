@@ -244,6 +244,7 @@ class Messages extends DataSource {
 
         $messageID = $this->getMessageID($message);
         $message['id'] = $messageID;
+        $message['contact'] = $contact;
 
         if (!array_key_exists($messageID, $this->messages)) {
             $keepUntil = time() + $this->storageTTL;

@@ -41,7 +41,7 @@ var Messages = React.createClass({
                     return (
                         <div className="message-story" key={row.id}>
                             <div className="message-message">{row.message}</div>
-                            <div className="message-from">{row.from}</div>
+                            <div className="message-from">{row.contact.nick}</div>
                         </div>
                     );
                 })}

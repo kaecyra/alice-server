@@ -705,7 +705,7 @@ var Messages = React.createClass({
                         React.createElement(
                             'div',
                             { className: 'message-from' },
-                            row.from
+                            row.contact.nick
                         )
                     );
                 })

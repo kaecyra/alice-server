@@ -97,6 +97,9 @@ class MirrorClient extends UIClient {
         $this->sendMessage('registered', [
             'version' => APP_VERSION
         ]);
+
+        // Wake mirror on connect
+        $this->motion();
     }
 
     /**

@@ -712,11 +712,7 @@ var Messages = React.createClass({
                             { className: 'message-time' },
                             row.time
                         ),
-                        React.createElement(
-                            'div',
-                            { className: 'message-message' },
-                            row.formatted
-                        )
+                        React.createElement('div', { className: 'message-message', dangerouslySetInnerHTML: { __html: row.formatted } })
                     );
                 })
             )

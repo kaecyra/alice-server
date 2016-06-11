@@ -257,8 +257,6 @@ class Messages extends DataSource {
             $this->messages[$messageID] = $message;
 
             $this->setWake(true);
-        } else {
-            $this->rec(" message is a duplicate, ignoring");
         }
     }
 
@@ -279,15 +277,10 @@ class Messages extends DataSource {
         $limit = val('limit', $config);
         $messages = array_slice($messages, 0, $limit);
 
-        $this->rec("tz = {$config['timezone']}");
-
         $tz = new \DateTimeZone($config['timezone']);
 
         foreach ($messages as &$message) {
-            $this->rec($message);
-            $this->rec(" date = {$message['date']}");
             $date = new DateTime($message['date'], $tz);
-            $this->rec(" converted: ".$date->format('l, g:ia'));
             $message['time'] = $this->getTimeAgo($date);
         }
 

@@ -373,7 +373,9 @@ class MirrorClient extends UIClient {
         apcu_store($this->getCacheKey(self::MIRROR_HIBERNATE), $time);
 
         // Tell motion sensor to hibernate screen
-        $this->findSensorWant('motion')->getSource()->tellHibernate();
+        if ($this->findSensorWant('motion')) {
+            $this->findSensorWant('motion')->getSource()->tellHibernate();
+        }
 
         $this->sendMessage('hibernate');
         return true;
@@ -409,7 +411,9 @@ class MirrorClient extends UIClient {
         }
 
         // Tell motion sensor to unhibernate screen
-        $this->findSensorWant('motion')->getSource()->tellUnhibernate();
+        if ($this->findSensorWant('motion')) {
+            $this->findSensorWant('motion')->getSource()->tellUnhibernate();
+        }
 
         $this->sendMessage('unhibernate');
         return true;

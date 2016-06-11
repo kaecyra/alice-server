@@ -277,10 +277,12 @@ class Messages extends DataSource {
         $limit = val('limit', $config);
         $messages = array_slice($messages, 0, $limit);
 
+        $utcTZ = new \DateTimeZone('UTC');
         $tz = new \DateTimeZone($config['timezone']);
 
         foreach ($messages as &$message) {
-            $date = new DateTime($message['date'], $tz);
+            $date = new DateTime($message['date'], $utcTZ);
+            $date->setTimezone($tz);
             $message['time'] = $this->getTimeAgo($date);
         }
 

@@ -12,6 +12,9 @@ use Alice\Source\DataSource;
 
 use \ZMQ;
 
+use HeyUpdate\Emoji\Emoji;
+use HeyUpdate\Emoji\EmojiIndex;
+
 use \DateTime;
 
 /**
@@ -254,6 +257,11 @@ class Messages extends DataSource {
             $keepUntil = time() + $this->storageTTL;
             $message['keep'] = $keepUntil;
             $message['received'] = time();
+
+            $emoji = new Emoji(new EmojiIndex(), '//twemoji.maxcdn.com/36x36/%s.png');
+            $message['formatted'] = $emoji->replaceEmojiWithImages($message['message']);
+
+
             $this->messages[$messageID] = $message;
 
             $this->setWake(true);

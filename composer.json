@@ -23,7 +23,8 @@
         "kaecyra/alice-common": "dev-master",
         "cboden/ratchet": "0.3.*",
         "slim/slim": "^3.0",
-        "react/zmq": "0.2.*|0.3.*"
+        "react/zmq": "0.2.*|0.3.*",
+        "heyupdate/emoji": "^1.0"
     },
     "autoload": {
         "psr-4": { 

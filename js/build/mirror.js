@@ -715,7 +715,7 @@ var Messages = React.createClass({
                         React.createElement(
                             'div',
                             { className: 'message-message' },
-                            row.message
+                            row.formatted
                         )
                     );
                 })

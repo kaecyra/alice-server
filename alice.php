@@ -13,7 +13,7 @@ namespace Alice;
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
- * @version 2.0.5
+ * @version 2.0.6
  */
 
 use \Alice\Daemon\Daemon;

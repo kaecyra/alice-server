@@ -395,7 +395,7 @@ SocketClient.prototype.message_registered = function (data) {
     var serverVersion = data.version;
     if (this.registeredVersion !== null) {
         if (serverVersion !== this.registeredVersion) {
-            this.log(" server version changed (" + this.registeredVersion + " -> " + serverVersion + ", reloading UI");
+            this.log(" server version changed (" + this.registeredVersion + " -> " + serverVersion + "), reloading UI");
             window.location.reload();
         }
     }

@@ -257,6 +257,8 @@ class Messages extends DataSource {
             $this->messages[$messageID] = $message;
 
             $this->setWake(true);
+        } else {
+            $this->rec(" message is a duplicate, ignoring");
         }
     }
 

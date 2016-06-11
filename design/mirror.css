@@ -335,7 +335,7 @@
 }
 
 .mirror-messages .messages-messages .message-story {
-  font-size: 20px;
+  font-size: 18px;
   margin: 15px 0px;
 }
 
@@ -350,6 +350,10 @@
 
 .mirror-messages .messages-messages .message-story .message-message {
   color: white;
-  font-size: 32px;
+  font-size: 36px;
+}
+
+.mirror-messages .messages-messages .message-story .message-time {
+  font-size: 16px;
 }
 /*# sourceMappingURL=mirror.css.map */

@@ -329,12 +329,13 @@
             .message-from {
                 color: white;
             }
+            .message-time {
+                font-size: 16px;
+            }
             .message-message {
                 color: white;
                 font-size: 36px;
-            }
-            .message-time {
-                font-size: 16px;
+                margin-top: 4px;
             }
         }
     }

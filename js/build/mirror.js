@@ -709,13 +709,13 @@ var Messages = React.createClass({
                         ),
                         React.createElement(
                             'div',
-                            { className: 'message-message' },
-                            row.message
+                            { className: 'message-time' },
+                            row.time
                         ),
                         React.createElement(
                             'div',
-                            { className: 'message-time' },
-                            row.time
+                            { className: 'message-message' },
+                            row.message
                         )
                     );
                 })

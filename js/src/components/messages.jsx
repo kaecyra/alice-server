@@ -43,8 +43,8 @@ var Messages = React.createClass({
                             <div className="message-byline">
                                 message from <span className="message-from">{row.contact.nick}</span>
                             </div>
-                            <div className="message-message">{row.message}</div>
                             <div className="message-time">{row.time}</div>
+                            <div className="message-message">{row.message}</div>
                         </div>
                     );
                 })}

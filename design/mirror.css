@@ -348,12 +348,13 @@
   color: white;
 }
 
+.mirror-messages .messages-messages .message-story .message-time {
+  font-size: 16px;
+}
+
 .mirror-messages .messages-messages .message-story .message-message {
   color: white;
   font-size: 36px;
-}
-
-.mirror-messages .messages-messages .message-story .message-time {
-  font-size: 16px;
+  margin-top: 4px;
 }
 /*# sourceMappingURL=mirror.css.map */

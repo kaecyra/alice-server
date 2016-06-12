@@ -96,7 +96,7 @@ class Weather extends API {
             $hourly = val('hourly', $weatherData);
 
             $daily = val('daily', $weatherData);
-            $today = $daily[0];
+            $today = $daily['data'][0];
             $sunRiseToday = $today['sunriseTime'];
             $sunSetTonight = $today['sunsetTime'];
 

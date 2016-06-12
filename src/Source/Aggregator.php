@@ -394,8 +394,6 @@ class Aggregator {
                 $act = $used > $lastused ? 'rose' : 'fell';
                 $fmemusage = round($used / 1024 / 1024, 2);
                 $this->rec("memory usage {$act} by {$change}b (now {$fmemusage}MiB)");
-            } else {
-                $this->rec("memory usage stable");
             }
         }
     }

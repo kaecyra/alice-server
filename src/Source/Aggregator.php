@@ -75,6 +75,12 @@ class Aggregator {
     protected $lastPing;
 
     /**
+     * Last 10 measurements of ram usage
+     * @var array<Integer>
+     */
+    protected $used = [];
+
+    /**
      * Constructor
      *
      */
@@ -373,6 +379,22 @@ class Aggregator {
         // Occasionally check if wants should be purged
         if ((time() - $this->store->get(self::KEY_STILLWANTED)) > self::WANTED_CYCLE) {
             $this->cycleStillWanted();
+        }
+
+        // Calculate memory usage
+
+        $used = memory_get_usage();
+        array_unshift($this->used, $used);
+        $this->used = array_slice($this->used,0,10);
+        $lastused = $this->used[1];
+
+        if ($used != $lastused) {
+            $change = abs($used - $lastused);
+            $act = $used > $lastused ? 'rose' : 'fell';
+            $fmemusage = round($used / 1024 / 1024, 2);
+            $this->rec("memory usage {$act} by {$change}b (now {$fmemusage}MiB)");
+        } else {
+            $this->rec("memory usage stable");
         }
     }
 

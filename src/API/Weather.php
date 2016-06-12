@@ -83,21 +83,38 @@ class Weather extends API {
         $api->setBaseUrl($host);
 
         $response = $api->get($path, [
-            'units' => $apiUnits,
-            'exclude' => 'daily'
+            'units' => $apiUnits
         ]);
 
         if ($response->isResponseClass('2xx')) {
             $weatherData = $response->getBody();
 
             $current = val('currently', $weatherData);
+            $time = $current['time'];
+
             $minute = val('minutely', $weatherData);
             $hourly = val('hourly', $weatherData);
+
+            $daily = val('daily', $weatherData);
+            $today = $daily[0];
+            $sunRiseToday = $today['sunriseTime'];
+            $sunSetTonight = $today['sunsetTime'];
+
+            if ($time < $sunSetTonight) {
+                if ($time > $sunRiseToday) {
+                    $timeOfDay = 'day';
+                } else {
+                    $timeOfDay = 'night';
+                }
+            } else {
+                $timeOfDay = 'night';
+            }
 
             $summary = val('summary', $hourly);
             $minSummary = val('summary', $minute);
 
             $weather = array_merge($current, [
+                'sky' => $timeOfDay,
                 'summary' => rtrim($current['summary'], '.'),
                 'now' => rtrim($minSummary, '.'),
                 'today' => rtrim($summary, '.')

@@ -386,16 +386,7 @@ class Aggregator {
         $used = memory_get_usage();
         array_unshift($this->used, $used);
         $this->used = array_slice($this->used,0,10);
-        if (count($this->used) > 1) {
-            $lastused = $this->used[1];
 
-            if ($used != $lastused) {
-                $change = abs($used - $lastused);
-                $act = $used > $lastused ? 'rose' : 'fell';
-                $fmemusage = round($used / 1024 / 1024, 2);
-                $this->rec("memory usage {$act} by {$change}b (now {$fmemusage}MiB)");
-            }
-        }
     }
 
     /**

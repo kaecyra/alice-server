@@ -203,8 +203,8 @@
   background-image: url("images/weather/cloud-rain.png");
 }
 
-.mirror-weather .weather-now .weather-icon.icon-cloud {
-  background-image: url("images/weather/cloud.png");
+.mirror-weather .weather-now .weather-icon.icon-cloudy {
+  background-image: url("images/weather/cloudy.png");
 }
 
 .mirror-weather .weather-now .weather-icon.icon-fog {

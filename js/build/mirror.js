@@ -1101,10 +1101,11 @@ var Weather = React.createClass({
             case 'clear-day':
             case 'clear-night':
             case 'wind':
-            case 'cloud':
+            case 'cloudy':
                 return icon;
+            case 'cloud':
+                return 'cloudy';
             case 'fog':
-
                 return icon;
             case 'rain':
             case 'snow':

@@ -273,7 +273,7 @@ class Messages extends DataSource {
             $this->setWake(true);
 
             // Send audio alert
-            Output::alert(Output::ALERT_NOTIFY);
+            Output::alert(Output::ALERT_MESSAGE);
         }
     }
 

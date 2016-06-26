@@ -22,6 +22,7 @@ class Output {
     const ALERT_INFO = 'info';
     const ALERT_NOTIFY = 'notify';
     const ALERT_TONE = 'tone';
+    const ALERT_MESSAGE = 'message';
 
     const ALERT_START_LISTEN = 'start_listen';
     const ALERT_STOP_LISTEN = 'stop_listen';
@@ -56,7 +57,7 @@ class Output {
 
 
     public static function streamStream($stream) {
-        
+
     }
 
 }

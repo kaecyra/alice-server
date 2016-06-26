@@ -5,9 +5,11 @@
  * @copyright 2016 Tim Gunter
  */
 
-namespace Alice\Systems\Sensor;
+namespace Alice\Systems\Output;
 
 use Alice\Alice;
+
+use Alice\Common\Event;
 
 use Alice\Source\Source;
 
@@ -15,22 +17,15 @@ use Alice\Socket\SocketMessage;
 use Alice\Server\SocketClient;
 
 /**
- * ALICE Sensor instance
+ * ALICE Output instance
  *
  * @author Tim Gunter <tim@vanillaforums.com>
  * @package alice-server
  */
-class SensorClient extends SocketClient {
-
-    const SENSOR_MOTION = 'motion';
-    const SENSOR_CAMERA = 'camera';
-    const SENSOR_TEMPERATURE = 'temperature';
-    const SENSOR_HUMIDITY = 'humidity';
-    const SENSOR_SMOKE = 'smoke';
-    const SENSOR_LIGHT = 'light';
+class OutputClient extends SocketClient {
 
     /**
-     * Sensor settings (from client)
+     * Output settings (from client)
      * @var array
      */
     protected $settings;
@@ -41,8 +36,16 @@ class SensorClient extends SocketClient {
      */
     protected $source;
 
+
+    public function __construct(\Ratchet\ConnectionInterface $connection) {
+        parent::__construct($connection);
+
+        Event::hook('output_alert', [$this, 'output_alert']);
+        Event::hook('output_tts', [$this, 'output_tts']);
+    }
+
     /**
-     * Handle sensor registrations
+     * Handle output registrations
      *
      * @param SocketMessage $message
      */
@@ -52,13 +55,13 @@ class SensorClient extends SocketClient {
     }
 
     /**
-     * Register sensor client
+     * Register output client
      *
      * @param array $data
      * @return boolean
      */
     protected function registerClient($data) {
-        $this->rec(" sensor client registering");
+        $this->rec(" output client registering");
 
         // Name
         $name = val('name', $data);
@@ -76,34 +79,40 @@ class SensorClient extends SocketClient {
         }
         $this->settings = $settings;
 
-        // Create source
-        $type = val('type', $data);
-        $this->source = Alice::go()->aggregator()->loadSource(Source::CLASS_SENSOR, $type, $data);
-        $this->source->attachClient($this);
-        Alice::go()->aggregator()->addSource($this->source);
-
-        // Let the sensor know that registration was successful
+        // Let the output know that registration was successful
         $this->sendMessage('registered');
+
+        // Let output know how to listen for streamed data
+        $stream = Alice::go()->config()->get("output.stream");
+        $this->sendMessage('stream', $stream);
     }
 
     /**
-     * Handle sensor data
+     * Hook to handle "output_alert" events
      *
-     * @param SocketMessage $message
+     * Sends a message to the attached audio device to play the provided alert
+     * type.
+     *
+     * @param string $type
      */
-    public function message_sensor(SocketMessage $message) {
-        $sensed = $message->getData();
-        $this->source->pushData($sensed);
+    public function output_alert($type) {
+        $this->sendMessage('alert', [
+            'type' => $type
+        ]);
     }
 
     /**
-     * Cleanup
+     * Hook to handle "output_tts" events
      *
+     * Sends a message to the attached audio device to play the provided TTS
+     * string.
+     *
+     * @param string $text
      */
-    public function __destruct() {
-        if ($this->source instanceof Source) {
-            Alice::go()->aggregator()->removeSource($this->source);
-        }
+    public function output_tts($text) {
+        $this->sendMessage('tts', [
+            'text' => $text
+        ]);
     }
 
 }

@@ -165,11 +165,12 @@ class Alice implements App {
     }
 
     /**
-     * 
+     *
      *
      * @return Config
      */
     public function config() {
         return $this->config;
     }
+    
 }

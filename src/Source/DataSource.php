@@ -103,10 +103,19 @@ abstract class DataSource extends Source {
      * @return boolean
      */
     public function getWake($clear = true) {
+        return $this->wakeNext;
+    }
+
+    /**
+     * Get wake on next fetch
+     *
+     * Also set wake state to false.
+     *
+     * @return boolean
+     */
+    public function popWake() {
         $wake = $this->wakeNext;
-        if ($clear) {
-            $this->wakeNext = false;
-        }
+        $this->wakeNext = false;
         return $wake;
     }
 

@@ -63,7 +63,6 @@ class MirrorClient extends UIClient {
      */
     protected function registerClient($data) {
         $this->rec(" mirror client registering");
-        sleep(1);
 
         // Name
         $name = val('name', $data);

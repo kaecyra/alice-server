@@ -9,6 +9,7 @@ namespace Alice\Server;
 
 use Alice\Systems\Mirror\MirrorServer;
 use Alice\Systems\Sensor\SensorServer;
+use Alice\Systems\Output\OutputServer;
 
 /**
  * ALICE Socket Dispatcher
@@ -29,6 +30,9 @@ class SocketDispatcher extends \Ratchet\App {
 
         rec("   route: /sensor -> SensorServer");
         $this->route('/sensor', new SensorServer, ['*']);
+
+        rec("   route: /output -> OutputServer");
+        $this->route('/output', new OutputServer, ['*']);
     }
 
 }

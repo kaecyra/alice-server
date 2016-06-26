@@ -8,6 +8,7 @@
 namespace Alice\Source\Data;
 
 use Alice\Alice;
+use \Alice\Systems\Output\Output;
 use Alice\Source\DataSource;
 
 use \ZMQ;
@@ -270,6 +271,9 @@ class Messages extends DataSource {
             $this->messages[$messageID] = $message;
 
             $this->setWake(true);
+
+            // Send audio alert
+            Output::alert(Output::ALERT_NOTIFY);
         }
     }
 

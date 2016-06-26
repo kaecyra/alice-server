@@ -289,7 +289,7 @@ class Want {
         $this->rec('pulling update');
         $this->lastUpdated = time();
         $data = $this->source->fetch($this->filter, $this->config);
-        $wake = $this->source->getWake();
+        $wake = $this->source->popWake();
         $this->setCache($wake, 'wake');
         if ($data) {
             $this->setCache($data, 'data');

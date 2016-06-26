@@ -12,6 +12,12 @@
         "server": "127.0.0.1",
         "port": 11211
     },
+    "output": {
+        "stream": {
+            "broadcast": "255.255.255.255",
+            "port": 12500
+        }
+    },
     "data": {
         "client": {
             "useragent": "kaecyra/alice-server"
@@ -149,6 +155,15 @@
             "name": "Livingroom Mirror",
             "server": {
                 "path": "/sensor"
+            }
+        },
+        {
+            "type": "audio",
+            "id": "audio-output01",
+            "auth": "outputAUTH",
+            "name": "Livingroom Audio",
+            "server": {
+                "path": "/output"
             }
         }
     ]

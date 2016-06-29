@@ -14,6 +14,8 @@ use Alice\Source\Source;
 use Alice\Socket\SocketMessage;
 use Alice\Server\SocketClient;
 
+use Alice\Systems\Output\Output;
+
 /**
  * ALICE Sensor instance
  *
@@ -102,9 +104,34 @@ class SensorClient extends SocketClient {
      *
      * @param SocketMessage $message
      */
-    public function message_input(SocketMessage $message) {
+    public function message_event(SocketMessage $message) {
         $event = $message->getData();
         $this->rec($event);
+
+        $type = val('type', $event);
+        switch ($type) {
+            case 'cue':
+                $this->rec('audio input keyword');
+                Output::alert(Output::ALERT_START_LISTEN);
+                break;
+
+            case 'uncue':
+                $this->rec('audio input decoding');
+                Output::alert(Output::ALERT_NOTIFY);
+                break;
+
+            case 'command':
+                $this->rec('audio input phrase');
+                $phrase = val('phrase', $event);
+                if ($phrase) {
+                    $this->rec(" phrase: {$phrase}");
+                } else {
+                    $this->rec(" could not recognize utterance");
+                    Output::alert(Output::ALERT_FAIL);
+                }
+                break;
+        }
+
     }
 
     /**

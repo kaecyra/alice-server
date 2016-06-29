@@ -161,9 +161,18 @@
             "type": "audio",
             "id": "audio-output01",
             "auth": "outputAUTH",
-            "name": "Livingroom Audio",
+            "name": "Livingroom Audio Output",
             "server": {
                 "path": "/output"
+            }
+        },
+        {
+            "type": "audio",
+            "id": "audio-input01",
+            "auth": "inputAUTH",
+            "name": "Livingroom Audio Input",
+            "server": {
+                "path": "/sensor"
             }
         }
     ]

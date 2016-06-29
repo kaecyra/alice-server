@@ -8,7 +8,7 @@
 namespace Alice\Source\Data;
 
 use Alice\Alice;
-use \Alice\Systems\Output\Output;
+use Alice\Systems\Output\Output;
 use Alice\Source\DataSource;
 
 use \ZMQ;
@@ -44,7 +44,7 @@ class Messages extends DataSource {
      * ZeroMQ context
      * @var \ZMQContext
      */
-    protected $context;
+    protected $zmqcontext;
 
     /**
      * ZeroMQ data socket
@@ -115,7 +115,7 @@ class Messages extends DataSource {
 
         try {
             $this->rec("binding zero socket");
-            $this->context = new \React\ZMQ\Context(Alice::loop());
+            $this->zmqcontext = new \React\ZMQ\Context(Alice::loop());
 
             $zmqConfig = Alice::go()->config()->get('data.zero');
 
@@ -126,13 +126,13 @@ class Messages extends DataSource {
             $this->rec(" sync dsn: {$zmqSyncDSN}");
 
             // Bind receive socket
-            $this->zero = $this->context->getSocket(ZMQ::SOCKET_SUB);
+            $this->zero = $this->zmqcontext->getSocket(ZMQ::SOCKET_SUB);
             $this->zero->bind($zmqDataDSN);
             $this->zero->subscribe('sms-message');
             $this->zero->on('messages', [$this, 'getMessage']);
 
             // Bind sync socket
-            $this->zerosync = $this->context->getSocket(ZMQ::SOCKET_REP);
+            $this->zerosync = $this->zmqcontext->getSocket(ZMQ::SOCKET_REP);
             $this->zerosync->bind($zmqSyncDSN);
             $this->zerosync->on('message', [$this, 'syncMessage']);
 

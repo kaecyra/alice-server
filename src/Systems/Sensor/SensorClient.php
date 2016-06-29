@@ -28,6 +28,7 @@ class SensorClient extends SocketClient {
     const SENSOR_HUMIDITY = 'humidity';
     const SENSOR_SMOKE = 'smoke';
     const SENSOR_LIGHT = 'light';
+    const SENSOR_AUDIO = 'audio';
 
     /**
      * Sensor settings (from client)
@@ -94,6 +95,16 @@ class SensorClient extends SocketClient {
     public function message_sensor(SocketMessage $message) {
         $sensed = $message->getData();
         $this->source->pushData($sensed);
+    }
+
+    /**
+     * Handle sensor events
+     *
+     * @param SocketMessage $message
+     */
+    public function message_input(SocketMessage $message) {
+        $event = $message->getData();
+        $this->rec($event);
     }
 
     /**

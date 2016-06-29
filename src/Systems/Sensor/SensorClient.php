@@ -106,8 +106,6 @@ class SensorClient extends SocketClient {
      */
     public function message_event(SocketMessage $message) {
         $event = $message->getData();
-        $this->rec($event);
-
         $type = val('type', $event);
         switch ($type) {
             case 'cue':

@@ -27,7 +27,7 @@ abstract class API {
     }
 
     /**
-     * Record aggregator specific message
+     * Record API specific message
      *
      * @param mixed $message
      * @param integer $level

@@ -213,7 +213,7 @@ class ModuleManager {
      * Load all modules per the autoload
      *
      */
-    public function loadAll($modules) {
+    public function loadAll(array $modules) {
 
         // Include and instantiate active modules
         $this->enabled = [];

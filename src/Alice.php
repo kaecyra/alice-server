@@ -12,11 +12,16 @@ use Alice\Daemon\Daemon;
 
 use Alice\Common\Config;
 use Alice\Common\Event;
+use Alice\Common\Store;
+
+use Alice\ModuleManager;
 
 use Alice\Server\SocketDispatcher;
 
 use Alice\Source\Aggregator;
 use Alice\Source\Source;
+
+use Alice\Command\Dispatcher;
 
 use React\EventLoop\Factory as LoopFactory;
 
@@ -35,16 +40,34 @@ class Alice implements App {
     protected $config;
 
     /**
+     * Socket Dispatcher
+     * @var \Alice\Server\SocketDispatcher
+     */
+    protected $sockets;
+
+    /**
      * Data aggregator
      * @var \Alice\Source\Aggregator
      */
     protected $aggregator;
 
     /**
-     * Socket Dispatcher
-     * @var \Alice\Server\SocketDispatcher
+     * Command dispatcher
+     * @var \Alice\Command\Dispatcher
      */
-    protected $sockets;
+    protected $dispatcher;
+
+    /**
+     * Module manager
+     * @var \Alice\ModuleManager
+     */
+    protected $modules;
+
+    /**
+     * Data store
+     * @var \Alice\Common\Store
+     */
+    protected $store;
 
     /**
      * Loop
@@ -64,9 +87,17 @@ class Alice implements App {
 
         $appDir = Daemon::option('appDir');
 
+        // Store
+        $this->store = new Store();
+
         // Config
         rec(' reading config');
         $this->config = Config::file(paths($appDir, 'conf/config.json'), true);
+
+        // Modules
+        rec(' starting module manager');
+        $this->modules = new ModuleManager();
+        $this->modules->start($this->config());
     }
 
     /**
@@ -143,6 +174,9 @@ class Alice implements App {
             rec("  added source: ".$sensorSource->getID());
         }
 
+        // Create command dispatcher
+        $this->dispatcher = new Dispatcher();
+
         Event::fire('startup');
 
         rec(' starting listeners');
@@ -156,7 +190,7 @@ class Alice implements App {
     }
 
     /**
-     * Get aggregator
+     * Get aggregator reference
      *
      * @return \Alice\Source\Aggregator
      */
@@ -165,12 +199,38 @@ class Alice implements App {
     }
 
     /**
+     * Get dispatcher reference
      *
+     * @return \Alice\Command\Dispatcher
+     */
+    public function dispatcher() {
+        return $this->dispatcher;
+    }
+
+    /**
+     * Get config reference
      *
      * @return Config
      */
     public function config() {
         return $this->config;
     }
-    
+
+    /**
+     * Get module manager reference
+     *
+     * @return ModuleManager
+     */
+    public function modules() {
+        return $this->modules;
+    }
+
+    /**
+     * Get store reference
+     * @return Store
+     */
+    public function getStore() {
+        return $this->store;
+    }
+
 }

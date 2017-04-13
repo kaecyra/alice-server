@@ -108,11 +108,24 @@ class OutputClient extends SocketClient {
      * string.
      *
      * @param string $text
+     * @param string $eventID
      */
-    public function output_tts($text) {
+    public function output_tts($text, $eventID = null) {
         $this->sendMessage('tts', [
-            'text' => $text
+            'text' => $text,
+            'event' => $eventID
         ]);
+    }
+
+    /**
+     * Handle played event
+     *
+     * @param SocketMessage $message
+     */
+    public function message_played(SocketMessage $message) {
+        $event = $message->getData();
+        $eventID = val('event', $event);
+        Event::fire('output_played', [$eventID]);
     }
 
 }

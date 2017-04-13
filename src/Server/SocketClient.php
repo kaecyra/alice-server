@@ -52,6 +52,12 @@ abstract class SocketClient {
     protected $id;
 
     /**
+     * Client type
+     * @var string
+     */
+    protected $type;
+
+    /**
      *
      * @param \Alice\Systems\Mirror\ConnectionInterface $connection
      */
@@ -120,7 +126,7 @@ abstract class SocketClient {
     }
 
     /**
-     * Register a module hook
+     * Register a client hook
      *
      * @param string $event
      * @param string $signature
@@ -131,7 +137,7 @@ abstract class SocketClient {
     }
 
     /**
-     * Get list of events hooked by this module
+     * Get list of events hooked by this client
      *
      * @return array
      */
@@ -140,9 +146,9 @@ abstract class SocketClient {
     }
 
     /**
-     * Shutdown mirror
+     * Shutdown client
      *
-     * This method is called when the mirror disconnects from the server.
+     * This method is called when the client disconnects from the server.
      */
     public function shutdown() {
         $hooks = $this->getHooks();

@@ -101,21 +101,31 @@ abstract class SensorSource extends Source {
     }
 
     /**
-     * Deploy sensor data
+     * Receive and emit sensor data
      *
      * @param mixed $data
      */
     public function pushData($data) {
-        Event::fire($this->getEventID(), [$this->type, $this->id, $data]);
+        Event::fire($this->getEventID('data'), [$this->type, $this->id, $data]);
+    }
+
+    /**
+     * Receive and emit sensor events
+     *
+     * @param mixed $event
+     */
+    public function pushEvent($event) {
+        Event::fire($this->getEventID('event'), [$this->type, $this->id, $event]);
     }
 
     /**
      * Get event ID
      *
+     * @param string $eventType type of event. default 'data'
      * @return string
      */
-    public function getEventID() {
-        return "dataevent-{$this->class}:{$this->type}/{$this->id}";
+    public function getEventID($eventType = 'data') {
+        return "event-{$eventType}-{$this->class}:{$this->type}/{$this->id}";
     }
 
     /**
@@ -143,7 +153,7 @@ abstract class SensorSource extends Source {
 
     /**
      * Get SocketClient data provider
-     * 
+     *
      * @return SocketClient
      */
     public function getClient() {

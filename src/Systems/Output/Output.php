@@ -41,12 +41,15 @@ class Output {
      * Send TTS data
      *
      * @param string $text
+     * @return string $eventID
      */
     public static function tts($text) {
-        Event::fire('output_tts', [$text]);
+        $eventID = 'event-tts-'.uniqid('', true);
+        Event::fire('output_tts', [$text, $eventID]);
+        return $eventID;
     }
 
-
+    
     public static function streamFile($file) {
 
     }

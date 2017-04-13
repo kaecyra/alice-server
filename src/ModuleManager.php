@@ -73,7 +73,7 @@ class ModuleManager {
         $this->scanAll();
 
         // Load all activated modules
-        $modules = $config->get('modules');
+        $modules = $config->get('modules', []);
         $this->loadAll($modules);
     }
 

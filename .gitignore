@@ -1,3 +1,4 @@
+.DS_Store
 /conf/config.json
 /conf/data/dates-local-special.json
 /vendor/
